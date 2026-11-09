@@ -1,6 +1,6 @@
 # BookTrack
 
-[![Tests](https://github.com/mukraminbariwa5-create/booktrack/actions/workflows/tests.yml/badge.svg)](https://github.com/mukraminbariwa5-create/booktrack/actions/workflows/tests.yml)
+[![Tests](https://github.com/mukraminansao/booktrack/actions/workflows/tests.yml/badge.svg)](https://github.com/mukraminansao/booktrack/actions/workflows/tests.yml)
 
 **[Live demo](https://booktrack-demo.onrender.com)** · one-click librarian and member demo accounts (free hosting: the first visit can take about a minute to wake up).
 

@@ -58,7 +58,7 @@ return [
     ],
     // Shown on the public front page (index.php)
     'project' => [
-        'repo'       => 'https://github.com/mukraminbariwa5-create/booktrack',
+        'repo'       => 'https://github.com/mukraminansao/booktrack',
         'author'     => 'Mukramin Bariwa Ansao',
         'author_url' => 'https://www.linkedin.com/in/mukramin-a-001833333',
     ],
