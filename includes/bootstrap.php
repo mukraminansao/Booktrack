@@ -29,6 +29,18 @@ function config(string $key, $default = null)
 error_reporting(E_ALL);
 ini_set('display_errors', config('debug') ? '1' : '0');
 date_default_timezone_set(config('timezone', 'UTC'));
+require_once __DIR__.'/helpers.php';
+if(PHP_SAPI!=='cli'&&is_post())reject_oversized_request();
+
+if(PHP_SAPI!=='cli'&&config('security.require_https',false)){
+    $secure=!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off';
+    if(!$secure){$base=parse_url((string)config('app_url'));
+        if(($base['scheme']??'')!=='https'||empty($base['host'])){http_response_code(503);exit('BookTrack production requires a configured HTTPS app_url.');}
+        $origin='https://'.$base['host'].(isset($base['port'])?':'.$base['port']:'');
+        header('Location: '.$origin.'/'.ltrim($_SERVER['REQUEST_URI']??'/','/'),true,308);exit;
+    }
+    header('Strict-Transport-Security: max-age=31536000');
+}
 
 // ---------------------------------------------------------------- session
 if (session_status() === PHP_SESSION_NONE && PHP_SAPI !== 'cli') {
@@ -53,7 +65,7 @@ if (PHP_SAPI !== 'cli' && !headers_sent()) {
     // Cover previews come from Open Library, which serves images from archive.org.
     header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
         . "img-src 'self' data: blob: https://covers.openlibrary.org https://*.archive.org; font-src 'self'; "
-        . "connect-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; "
+        . "connect-src 'self'; media-src 'self' blob:; worker-src 'self'; object-src 'none'; base-uri 'self'; "
         . "form-action 'self'; frame-ancestors 'self'");
     header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=()');
 }
@@ -73,23 +85,48 @@ require_once __DIR__ . '/password_reset.php';
 require_once __DIR__ . '/fines.php';
 require_once __DIR__ . '/two_factor.php';
 require_once __DIR__ . '/demo.php';
+require_once __DIR__ . '/reading.php';
+require_once __DIR__ . '/operations.php';
+require_once __DIR__ . '/security.php';
+
+set_exception_handler(function(Throwable $error):void{
+    error_log('BookTrack unhandled: '.$error->getMessage());
+    if(PHP_SAPI==='cli')exit(1); // Error messages are logged above; traces can expose secret arguments.
+    if($error instanceof PDOException)database_unavailable($error);
+    if($error instanceof LibraryBusy){header('Retry-After: 10');if(wants_json())json_out(['ok'=>false,'error'=>$error->getMessage()],503);http_response_code(503);echo '<!doctype html><html lang="en"><meta charset="utf-8"><title>Library busy | BookTrack</title><body><h1>Library temporarily busy</h1><p>'.htmlspecialchars($error->getMessage()).'</p></body></html>';return;}
+    http_response_code(500);header('Cache-Control: no-store');
+    if(wants_json())json_out(['ok'=>false,'error'=>'The operation could not finish. Please try again.'],500);
+    echo '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Operation unavailable | BookTrack</title><body style="font-family:system-ui;background:#f1efe3;color:#201f1a;padding:32px"><h1>The operation could not finish</h1><p>Please try again. If the problem continues, contact the library administrator.</p></body></html>';
+});
+
+$restoring=(PHP_SAPI==='cli'&&basename($_SERVER['SCRIPT_FILENAME']??'')==='backup.php'&&($argv[1]??'')==='restore')
+    ||(basename($_SERVER['SCRIPT_NAME']??'')==='backups.php'&&($_POST['action']??'')==='restore');
+library_gate($restoring);
+if(PHP_SAPI!=='cli'&&is_post())library_write_enter();
 
 // Not installed yet (no tables): send people to the installer instead of an error page.
 if (PHP_SAPI !== 'cli') {
     try {
         db()->query('SELECT 1 FROM users LIMIT 1');
     } catch (PDOException $e) {
+        $missing=($e->getCode()==='42S02')||str_contains($e->getMessage(),'no such table: users');
+        if(!$missing)database_unavailable($e);
         header('Location: ' . url('setup.php'));
         exit;
     }
 }
 
 // Public demo: put the demo data back on the first visit of each day.
+with_library_write(function(){
 if (PHP_SAPI !== 'cli') run_daily_demo_reset();
 // Tables added after the first release are created on older installs.
 reviews_ensure_schema();
 fines_ensure_schema();
 two_factor_ensure_schema();
+two_factor_secret_schema();
+reading_ensure_schema();
+two_factor_encrypt_legacy();
 // Keep the hold queue current (and send the day's reminders) before any page reads availability.
 refresh_holds();
 if (PHP_SAPI !== 'cli') run_daily_reminders();
+});

@@ -1,16 +1,13 @@
-# BookTrack public demo on Render (free)
+# BookTrack public demo container
 
-This runs BookTrack as a **public portfolio demo** in one container: PHP 8.3 and Apache, with the demo library in SQLite. It's an alternative to [DEPLOY.md](../DEPLOY.md) (shared PHP hosting).
+Live demo: https://booktrack-demo.onrender.com. The GitHub Blueprint uses this Dockerfile and /health.php. See [DEPLOY.md](../DEPLOY.md) for deployment and acceptance checks.
 
-- **Fresh data on every start.** The demo library (books, members, loans, fines) is rebuilt each time the container starts.
-- **Real covers without storing them.** Publisher cover art isn't in the repository, so on start the container fetches the demo books' covers from [Open Library](https://openlibrary.org) ([`tools/fetch_demo_covers.php`](../tools/fetch_demo_covers.php)). A book with no cover found keeps its generated cover.
-- **Demo mode is on** ([`docker/config.local.php`](config.local.php)): one-click "Sign in as librarian / member" buttons, demo accounts protected, uploads off.
-- **Free plan sleep.** Render's free plan sleeps after 15 minutes without visitors and takes about a minute to wake on the next visit. Waking up also resets the demo.
+This image runs PHP/Apache with a private SQLite library. It is a disposable portfolio demo: records rebuild on every startup, demo accounts remain accessible, uploads are blocked and email is off. It is not the persistence configuration for a real library.
 
-## Put it online
+Startup seeds the database, adjusts runtime ownership, and initializes schema, locks and the encryption key as www-data before serving requests. The same user optionally downloads missing covers in the background. Keys, SQLite data and operation locks live under /var/lib/booktrack, outside the document root. Optional cover failures retain generated artwork.
 
-1. Sign up at [render.com](https://render.com) with your GitHub account.
-2. **New** → **Blueprint**, pick the **Booktrack** repository, and confirm. Render reads [`render.yaml`](../render.yaml) and builds the [`Dockerfile`](../Dockerfile).
-3. When it says **Live**, open the address Render gives you (like `https://booktrack-demo.onrender.com`).
+The numeric PORT defaults to 10000. Apache accepts Render's edge-provided X-Forwarded-Proto only in this proxy configuration so browser sessions receive Secure cookies on HTTPS. Do not copy that trust rule onto an unproxied public origin.
 
-Every push to `main` deploys again automatically. The **Demo container** job in GitHub Actions builds and checks this image on every push.
+The Docker context excludes active local settings, uploads, keys, backups, saved mail, runtime tests and review artifacts. The image contains the current application plus the protected CLI demo seeder; private data is never part of the release image.
+
+The Demo container CI job builds this image, exercises health/private-file restrictions, signs in to the warm dashboard and runs the deployment-purpose readiness report. Render deployment still needs to be observed after publishing; a successful CI job alone does not prove the live service updated.

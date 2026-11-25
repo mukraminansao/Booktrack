@@ -8,6 +8,10 @@ function current_user(bool $refresh = false): ?array
     static $cache = [];
     $id = $_SESSION['user_id'] ?? null;
     if (!$id) return null;
+    static $generation = null;
+    if ($generation === null || $refresh) $generation = library_setting('session_generation','');
+    if (!hash_equals($generation,(string)($_SESSION['library_generation'] ?? ''))) { logout(); return null; }
+    if(!hash_equals(library_setting('user_session_'.$id,''),(string)($_SESSION['user_generation']??''))){logout();return null;}
     if ($refresh || !array_key_exists($id, $cache)) {
         $cache[$id] = q_one('SELECT id, name, username, email, phone, role, is_active, created_at FROM users WHERE id = ?', [$id]);
     }
@@ -95,7 +99,16 @@ function sign_in_as(int $userId): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) session_regenerate_id(true);
     $_SESSION['user_id'] = $userId;
+    $_SESSION['library_generation'] = library_setting('session_generation','');
+    $_SESSION['user_generation'] = library_setting('user_session_'.$userId,'');
     q('UPDATE users SET last_login_at = ? WHERE id = ?', [date('Y-m-d H:i:s'), $userId]);
+}
+
+function revoke_user_sessions(int $userId,bool $keepCurrent=false):void
+{
+    $version=bin2hex(random_bytes(24));reading_upsert('app_settings',['setting_key'=>'user_session_'.$userId],['setting_value'=>$version]);
+    if($keepCurrent&&($_SESSION['user_id']??0)===$userId)$_SESSION['user_generation']=$version;
+    unset($_SESSION['2fa_pending']);
 }
 
 /**

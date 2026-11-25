@@ -44,6 +44,27 @@ function find_book(int $id): ?array
     return q_one('SELECT ' . book_columns() . ' FROM ' . books_from() . ' WHERE b.id = ?', [$id]);
 }
 
+/** Catalogue changes and circulation share the same writer/transaction boundary. */
+function update_catalogue_book(int $id,array $values,?string $cover,?string $pdf):void
+{
+    transaction(function()use($id,$values,$cover,$pdf){
+        $book=q_one('SELECT * FROM books WHERE id=?'.for_update(),[$id]);if(!$book)throw new DomainException('That book no longer exists.');
+        $used=(int)q_val('SELECT COUNT(*) FROM loans WHERE book_id=? AND status IN '.ACTIVE_LOAN,[$id])+(int)q_val("SELECT COUNT(*) FROM holds WHERE book_id=? AND status='ready'",[$id]);
+        if(count($values)!==7||(int)$values[5]<max(1,$used))throw new DomainException('Copies cannot be lower than the number on loan or reserved.');
+        if($pdf!==$book['pdf'])reading_replace_file($id,'ebook');
+        q('UPDATE books SET title=?,author=?,category=?,isbn=?,published_year=?,copies=?,description=?,cover=?,pdf=? WHERE id=?',[...$values,$cover,$pdf,$id]);
+        log_activity('book.updated',$values[0]);
+    });
+}
+function delete_catalogue_book(int $id):?array
+{
+    return transaction(function()use($id){
+        $book=q_one('SELECT * FROM books WHERE id=?'.for_update(),[$id]);if(!$book)return null;
+        if(q_val('SELECT COUNT(*) FROM loans WHERE book_id=? AND status IN '.ACTIVE_LOAN,[$id]))throw new DomainException('This book cannot be deleted while it is on loan.');
+        $book['audio_file']=media_for($id)['audio_file']??null;q('DELETE FROM books WHERE id=?',[$id]);log_activity('book.deleted',$book['title']);return $book;
+    });
+}
+
 function categories(): array
 {
     return array_column(q_all("SELECT category, COUNT(*) AS n FROM books WHERE category IS NOT NULL AND category <> '' GROUP BY category ORDER BY category"), 'n', 'category');
@@ -182,24 +203,28 @@ function find_loan(int $id): ?array
 /** Member asks to return a book; the librarian confirms when it's back on the shelf. */
 function request_return(int $loanId, int $userId): void
 {
+    transaction(function()use($loanId,$userId){
     $loan = find_loan($loanId);
     if (!$loan || (int)$loan['user_id'] !== $userId) throw new DomainException('Loan not found.');
     if ($loan['status'] !== 'borrowed') throw new DomainException('A return has already been requested for this book.');
-    q("UPDATE loans SET status = 'return_requested' WHERE id = ?", [$loanId]);
+    q("UPDATE loans SET status = 'return_requested' WHERE id = ? AND status = 'borrowed'", [$loanId]);
     log_activity('loan.return_requested', "{$loan['member_name']} asked to return “{$loan['title']}”");
+    });
 }
 
 /** Take back a return request (the Undo after "Return"), as long as it hasn't been checked in. */
 function cancel_return(int $loanId, int $userId): void
 {
+    transaction(function()use($loanId,$userId){
     $loan = find_loan($loanId);
     if (!$loan || (int)$loan['user_id'] !== $userId) throw new DomainException('Loan not found.');
     if ($loan['status'] !== 'return_requested') throw new DomainException('The librarian has already checked this book in.');
     // Requesting a return lifts the overdue block, so keeping an overdue book
     // after all would let a member borrow more while still holding it.
     if ($loan['due_at'] < today()) throw new DomainException('This book is overdue, so the return can\'t be cancelled. Please bring it to the desk.');
-    q("UPDATE loans SET status = 'borrowed' WHERE id = ?", [$loanId]);
+    q("UPDATE loans SET status = 'borrowed' WHERE id = ? AND status = 'return_requested'", [$loanId]);
     log_activity('loan.return_cancelled', "{$loan['member_name']} kept “{$loan['title']}” after all");
+    });
 }
 
 /**
@@ -254,6 +279,7 @@ function reminders_for(array $user): array
 /** Members can renew once, as long as the loan isn't overdue. */
 function renew_loan(int $loanId, int $userId): string
 {
+    return transaction(function()use($loanId,$userId){
     $loan = find_loan($loanId);
     if (!$loan || (int)$loan['user_id'] !== $userId) throw new DomainException('Loan not found.');
     if ($loan['status'] !== 'borrowed') throw new DomainException('Only active loans can be renewed.');
@@ -263,6 +289,7 @@ function renew_loan(int $loanId, int $userId): string
     q('UPDATE loans SET due_at = ?, renewals = renewals + 1 WHERE id = ?', [$due, $loanId]);
     log_activity('loan.renewed', "{$loan['member_name']} renewed “{$loan['title']}”, now due " . fmt_date($due, 'j M'));
     return $due;
+    });
 }
 
 /**

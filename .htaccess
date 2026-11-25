@@ -3,6 +3,14 @@ Options -Indexes
 AddDefaultCharset UTF-8
 DirectoryIndex index.php
 
+# Startup warnings happen before application error handling (e.g. oversized POSTs).
+# Log them rather than sending output before cookies/status headers can be set.
+<IfModule php_module>
+  php_flag display_errors Off
+  php_flag display_startup_errors Off
+  php_flag log_errors On
+</IfModule>
+
 # Friendly "page not found" for any missing page inside BookTrack
 <IfModule mod_rewrite.c>
   RewriteEngine On
@@ -20,11 +28,19 @@ DirectoryIndex index.php
 </IfModule>
 
 # Never serve these files directly
-<FilesMatch "^(config\.php|config\.local\.php|config\.local\.example\.php|.*\.sql|.*\.sqlite|.*\.md|.*\.log|.*\.yml)$">
+<FilesMatch "^(config\.php|config\.local\.php|config\.local\.example\.php|config\.production\.example\.php|.*\.sql|.*\.sqlite|.*\.md|.*\.log|.*\.yml)$">
   Require all denied
 </FilesMatch>
 
 AddType font/woff2 .woff2
+AddType application/javascript .mjs
+
+# ES module imports have stable URLs; always revalidate them after code changes.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|mjs)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
 
 <IfModule mod_expires.c>
   ExpiresActive On

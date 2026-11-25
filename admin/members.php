@@ -20,6 +20,7 @@ if (is_post()) {
         $password = (string)($_POST['password'] ?? '');
         $existing = $id ? q_one("SELECT * FROM users WHERE id = ? AND role = 'member'", [$id]) : null;
 
+        if($existing&&(input('version')===''||!hash_equals(edit_version('members',$id),input('version'))))$formErrors[]='This member changed in another editor. Reload before saving.';
         if ($id && !$existing) $formErrors[] = 'That member no longer exists.';
         if ($existing && is_demo_account($existing)) $formErrors[] = 'This is a shared demo account, so it can\'t be changed. Add a new member to try editing one.';
         if ($data['name'] === '') $formErrors[] = 'Name is required.';
@@ -32,10 +33,11 @@ if (is_post()) {
         if ($existing && $password !== '' && strlen($password) < 8) $formErrors[] = 'New passwords must be at least 8 characters.';
 
         if (!$formErrors) {
+            transaction(function()use($existing,$data,$id,$password){
             if ($existing) {
                 q('UPDATE users SET name = ?, username = ?, email = ?, phone = ?, is_active = ? WHERE id = ?',
                     [$data['name'], $data['username'], $data['email'] ?: null, $data['phone'] ?: null, $data['is_active'], $id]);
-                if ($password !== '') q('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($password, PASSWORD_DEFAULT), $id]);
+                if ($password !== '') {q('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($password, PASSWORD_DEFAULT), $id]);revoke_user_sessions($id);}
                 log_activity('member.updated', $data['name'] . ($password !== '' ? ', password reset' : ''));
                 flash('success', $data['name'] . '\'s account was updated.');
             } else {
@@ -44,6 +46,7 @@ if (is_post()) {
                 log_activity('member.created', $data['name']);
                 flash('success', $data['name'] . ' can now sign in as @' . $data['username'] . '.');
             }
+            });
             back('admin/members.php');
         }
         $formData = $data + ['id' => $id ?: ''];
@@ -84,7 +87,7 @@ $members = q_all("SELECT u.id, u.name, u.username, u.email, u.phone, u.is_active
                     (SELECT COUNT(*) FROM loans l WHERE l.user_id = u.id) AS total_loans
                   FROM users u $whereSql ORDER BY u.name LIMIT {$p['per']} OFFSET {$p['offset']}", array_merge([today()], $params));
 
-$memberJson = fn(array $m) => json_encode(['id' => $m['id'], 'name' => $m['name'], 'username' => $m['username'], 'email' => $m['email'], 'phone' => $m['phone'], 'is_active' => $m['is_active']], JSON_UNESCAPED_UNICODE);
+$memberJson = fn(array $m) => json_encode(['version'=>edit_version('members',(int)$m['id']),'id' => $m['id'], 'name' => $m['name'], 'username' => $m['username'], 'email' => $m['email'], 'phone' => $m['phone'], 'is_active' => $m['is_active']], JSON_UNESCAPED_UNICODE);
 
 $title = 'Members';
 $active = 'members';
@@ -154,7 +157,7 @@ require __DIR__ . '/../includes/partials/header.php';
 <?php $f = $formData; $isEdit = $f && !empty($f['id']); ?>
 <dialog class="modal" id="member-dialog" <?= $formErrors ? 'data-autoopen' : '' ?> aria-labelledby="member-h">
   <form method="post" autocomplete="off">
-    <?= csrf_field() ?><input type="hidden" name="action" value="save"><input type="hidden" name="id" value="<?= e($f['id'] ?? '') ?>">
+    <?= csrf_field() ?><input type="hidden" name="action" value="save"><input type="hidden" name="version" value="<?= e(input('version',!empty($f['id'])?edit_version('members',(int)$f['id']):'')) ?>"><input type="hidden" name="id" value="<?= e($f['id'] ?? '') ?>">
     <div class="modal__head"><h2 id="member-h" data-title-edit="Edit member" data-title-create="Add a member"><?= $isEdit ? 'Edit member' : 'Add a member' ?></h2>
       <button class="btn btn--ghost btn--icon btn--sm" type="button" data-close aria-label="Close"><?= icon('x') ?></button></div>
     <div class="modal__body">

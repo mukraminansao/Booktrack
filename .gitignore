@@ -13,6 +13,17 @@ uploads/pdfs/*
 storage/mail/*
 !storage/mail/.gitkeep
 storage/*.txt
+storage/backups/*
+!storage/backups/.htaccess
+uploads/audio/*
+!uploads/audio/.htaccess
+tests/runtime/*
+!tests/runtime/.gitignore
 
 # upload package for hosting (made from the project, not part of it)
 deploy/
+storage/keys/
+storage/locks/
+*.btenc
+_backups/
+__pycache__/

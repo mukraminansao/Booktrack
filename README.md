@@ -1,12 +1,12 @@
 # BookTrack
 
-[![Tests](https://github.com/mukraminansao/booktrack/actions/workflows/tests.yml/badge.svg)](https://github.com/mukraminansao/booktrack/actions/workflows/tests.yml)
+[Hosted public demo](https://booktrack-demo.onrender.com) · PHP/Apache with an isolated, disposable SQLite library on Render.
 
-**[Live demo](https://booktrack-demo.onrender.com)** · one-click librarian and member demo accounts (free hosting: the first visit can take about a minute to wake up).
+[![Tests](https://github.com/mukraminansao/Booktrack/actions/workflows/tests.yml/badge.svg)](https://github.com/mukraminansao/Booktrack/actions/workflows/tests.yml)
 
 A library management system for small libraries, built with plain PHP and MySQL. Members browse the catalogue, borrow and renew books, and message the librarian. Librarians run the whole library from one dashboard: circulation, books, members and messages.
 
-![Member dashboard](docs/screenshots/discover.png)
+![Member dashboard](visual-review/two-tone-desktop.jpg)
 
 | Librarian overview | Circulation |
 |---|---|
@@ -37,11 +37,12 @@ A library management system for small libraries, built with plain PHP and MySQL.
 - A digital library card on the profile page, with a full-screen QR view to show at the desk
 - Due-date countdowns that turn gold when a book is due soon and red when it's overdue
 - Favorites, reading history, and a Messenger-style chat with the library (live updates, "Seen", Enter to send)
-- Read attached e-book PDFs (signed-in users only)
+- Read attached PDFs with page navigation, zoom, selectable text, chapter links, bookmarks and saved reading progress; resume from the dashboard or mark a book finished
+- Listen to uploaded audiobooks with seeking, playback speed, chapter markers, bookmarks and account-based resume
 - Instant search from any page (Ctrl+K or `/`): books appear as you type, with arrow-key navigation and page shortcuts
 - A reminders bell for books due soon or overdue and new replies from the library
 - Undo instead of "are you sure?" for reversible actions (favorites, return requests)
-- Night (dark) and Day (light) themes, remembered per device
+- Day (warm cream and gold) and Night (dark) member themes, remembered per device across every member page
 
 **For librarians**
 - Overview dashboard: key numbers, return requests and overdue loans to action, loans per month, most borrowed books and recent activity
@@ -59,6 +60,8 @@ A library management system for small libraries, built with plain PHP and MySQL.
 - Export to CSV (opens in Excel): any Circulation tab, the member list or the catalogue, using the filters on screen
 - Two-pane chat inbox: every conversation shows the member's name, @username, unread count and loans at a glance; quick replies; start a chat with any member
 - An activity log of every change
+- Content & audio: choose featured books, publish or hide curated collections, upload recordings and edit PDF/audio chapters
+- Backups: create private database-and-attachment archives, review a restore, and recover with password confirmation and an automatic safety copy
 
 **Library rules** (in `config.php`)
 - Loan period (14 days), maximum books per member (3), and the "due soon" window (3 days)
@@ -73,10 +76,10 @@ A library management system for small libraries, built with plain PHP and MySQL.
 
 - PHP 8.1+ (no framework, no Composer dependencies) with PDO and prepared statements
 - MySQL / MariaDB (XAMPP)
-- Hand-written CSS design system ("Night Shelf": deep navy surfaces, an icon rail, one gold accent from the logo, Bricolage Grotesque + DM Sans), responsive down to phone size, with Night and Day themes
+- Hand-written CSS: a warm editorial member shell with serif headings, DM Sans, ivory/white surfaces and a gold accent. Desktop/laptop retain the icon rail; tablet/mobile use a compact header and bottom navigation. Librarian pages share the warm Day palette and serif headings while retaining their established workflow and Night theme
 - Fonts served from the project itself (`assets/fonts`), so pages make no third-party requests and look right offline
 - Accessibility: keyboard navigation with a skip link and visible focus, labelled controls, and text contrast of at least 4.5:1 in both themes
-- A little vanilla JavaScript for progressive enhancement. Every page also works without it.
+- Vanilla JavaScript for progressive enhancement. The PDF reader uses a local copy of Mozilla PDF.js 6.5.438 (Apache 2.0, license in `assets/vendor/pdfjs/LICENSE`). Original PDFs and native audio controls remain available without JavaScript; saved progress requires JavaScript
 
 ## Security
 
@@ -111,6 +114,56 @@ The full threat model, with every defense and its known limits, is in **[SECURIT
 | Member | `alice` (also `brian`, `carla`, `diego`, `ella`) | `member123` |
 
 If your MySQL user has a password, or you want a different database name, edit `config.php`.
+
+If XAMPP is closed or BookTrack cannot connect, run this from the project folder in PowerShell:
+
+```powershell
+.\tools\start-local.ps1
+```
+
+The helper starts missing Apache/MySQL processes and checks the BookTrack page. It uses the existing XAMPP configuration and never imports or resets a database. Use `-CheckOnly` to check without starting anything, or `-XamppRoot` for a different XAMPP location. If a process exists but its port is unavailable, it stops with a diagnostic instead of launching a duplicate. The database outage page offers a retry; setup is offered only when the configured database does not exist.
+
+### Isolated UI preview (without starting MySQL)
+
+From the project root in PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\visual-review\start-preview.ps1
+```
+
+Open **http://127.0.0.1:8080/login.php** and use the documented demo accounts above. This development preview uses a separate SQLite fixture in the operating system's temporary directory; it does not import into or reset your MySQL database. The terminal must remain running while you use the preview.
+
+The completed member UI checklist, test scope and screenshots are in **[visual-review/member-rollout.md](visual-review/member-rollout.md)**.
+
+The current member dashboard follows the supplied warm ivory references: a quiet search header, slender icon rail, open-book hero, dimensional covers, player, chapter timeline and collection. Both laptops (1200–1439px) and desktops (1440px and up) use the split showcase composition: the shelf and collection on the left, audio and chapters on the right. Laptops use slightly condensed spacing. Tablets and phones use bottom navigation. Sign-in and the public welcome page share the same typography and palette. Uploaded recordings play as real audio; titles without a recording retain the explicitly labelled speech-synthesis catalogue preview.
+
+Current previews: [laptop](visual-review/two-tone-laptop.jpg), [desktop](visual-review/two-tone-desktop.jpg), [phone](visual-review/showcase-corrected-mobile.jpg), and [sign-in](visual-review/reference-redesign-signin.jpg). Laptop and desktop dashboards use the reference's sampled ivory (#F1EFE3) and near-white (#FCFBF7), split continuously through the header, hero and lower sections. The corrected layout was checked at 390, 800, 1200, 1280, 1366, 1440 and 1920px with no horizontal overflow; the two-tone update was verified at 1280 and 1440px and the phone layout checked at 390px. The replacement open-book artwork has curved portrait pages, a growth graph, and a transparent shadow; its aspect ratio is preserved across screens. [Asset and generation prompt](visual-review/open-book-reference-generation.json). Rebuild its WebP exports with `php tools/build_reading_art.php`. The preceding functional validation passed 118 library-rule checks, 8 chat-migration checks, and 80 end-to-end HTTP checks against isolated SQLite fixtures.
+
+Existing cover artwork now has lightweight WebP previews. After replacing seed artwork, rebuild these with `php tools/build_cover_previews.php`; missing or outdated previews fall back to the original cover. Original artwork remains available.
+
+### Reading, recordings and curated shelves
+
+New reading/media tables are added automatically on the next request; existing catalogue and circulation records are retained. A book's **Read e-book** button opens the reader, and **Open original PDF** provides a fallback when a document or browser cannot render a page. Progress and bookmarks belong to the signed-in account. The dashboard prioritizes that account's latest unfinished book over the librarian's featured selection.
+
+Resume links skip missing files while keeping saved progress intact, and new progress/bookmarks are rejected when their file is unavailable. The chapter editor supports up to 200 markers per format, including saving an already-full list. Audio times such as `90:00` are accepted, and displayed elapsed time does not wrap after 24 hours. Bookmark and chapter-row removal retain keyboard focus.
+
+Use **Librarian → Content & audio** to choose featured titles and create, edit, publish or hide collections. The first published collection by display order appears on the dashboard. Book-order numbers control the shelf order; validation errors retain your draft and existing order survives editing. From the same page, open a title to upload MP3, M4A, OGG or WAV audio and add chapter markers. PDF chapters use page numbers starting at 1; audio chapters accept seconds, `mm:ss` or `h:mm:ss`. Recordings are not bundled: upload audio the library has permission to share. The application limit is 50 MB per recording, with the effective limit also constrained by PHP's `upload_max_filesize` and `post_max_size`, shown on the form.
+
+### Backup and recovery
+
+Use **Librarian → Backups** to create and download a TAR archive containing the database records and original covers, PDFs and recordings. Archives stay under private `storage/backups/`; configuration secrets and generated cover previews are excluded. Keep copies outside the web server too. Creation stops if a referenced attachment is missing, so a successful archive can be restored completely.
+
+To recover, upload an archive for review, check its date and record counts, then enter the current librarian password and type `RESTORE`. You can cancel a review without changing library records. Temporary review uploads expire after 30 minutes and are cleaned up when the backup page is used; saved and safety backups are retained. Recovery replaces library records and matching attachments, creates a safety backup first, and signs out existing sessions. Unreferenced files are retained. Archives are checked for paths, checksums and compatible table columns; use the same BookTrack schema version when restoring. Archives contain private account records and are not encrypted. Backup downloads and restores are disabled on the shared public demo.
+
+For archives larger than the server's form-upload limit, run these commands from the project root:
+
+```text
+php tools/backup.php create
+php tools/backup.php inspect path/to/archive.tar
+php tools/backup.php restore path/to/archive.tar --confirm-replace-library
+```
+
+The preceding warm desktop/phone design, readable type scale, one consistent open-book master, motion, image optimization, SEO scope and **458 passing checks** are documented in **[visual-review/premium-audit.md](visual-review/premium-audit.md)**. Its sources are `design-reference/BookTrack_Warm_Desktop.png` and `design-reference/BookTrack_Warm_Mobile.png`. Previous reviews remain available as historical evidence.
 
 ### Reminder emails
 
@@ -187,6 +240,11 @@ The library rules (availability, loan limits, overdue blocking, renewals, return
 ```
 php tests/rules_test.php
 php tests/chat_migration_test.php   # upgrading an older install carries old messages into chats
+php tests/enhancements_test.php     # isolated progress/media/migration/backup recovery tests
+php tests/hardening_test.php        # security, file faults and real concurrent workers
+php tests/recovery_drill_test.php    # a separate installation, matching key and rollback denial
+php tests/health_test.php            # no sessions or database writes from monitoring
+node tests/reading_state_test.mjs   # progress-save races, timeouts and reconnect recovery
 ```
 
 An end-to-end script signs in as a member, a librarian and a guest and drives every action over HTTP: borrowing limits, renewals, returns and check-in, favorites, messages, book and member management, upload checks, private PDFs, CSRF rejection, the lockout, CSV exports, late fees, two-step sign-in, the password reset pages and the security headers. Run it against a freshly installed copy (it needs Python with `requests`):
@@ -194,6 +252,12 @@ An end-to-end script signs in as a member, a librarian and a guest and drives ev
 ```
 BOOKTRACK_URL=http://localhost/booktrack-v2 python tests/e2e_test.py
 ```
+
+`tests/enhancements_http_test.py` exercises the reading, media, content and recovery endpoints. It changes records and restores a backup, and refuses to run unless `BOOKTRACK_SQLITE` points inside `tests/runtime` and `BOOKTRACK_URL` is a loopback server using that same fixture. Never point either HTTP suite at the live library. To check the new database features on MySQL/MariaDB, set `BOOKTRACK_TEST_MYSQL=1` when running `tests/enhancements_test.php`; it creates and removes a separately named test database and needs permission to do so.
+
+Latest validation: **480 passing checks** across rules, chat migration, legacy/enhancement HTTP flows, focused hardening HTTP flows, SQLite/MySQL recovery and concurrency, and client-state failures. PHP syntax checks cover 117 files; five JavaScript modules and four Python sources were also checked. `visual-review/hardening-audit.json` records the results. Fresh visual browser inspection was blocked by automatic approval review reporting the account usage limit; prior screenshots and `followup-audit.json` remain historical evidence.
+
+See [HARDENING.md](HARDENING.md) for the full 22-item status, replacement policy, encrypted-backup commands, recovery limits and production prerequisites. `php tools/readiness.php` runs read-only configuration/account checks; the local demo intentionally does not pass production readiness. `config.production.example.php` is an opt-in host template, not an active configuration.
 
 ## Demo covers
 

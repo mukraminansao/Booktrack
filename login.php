@@ -21,6 +21,7 @@ require __DIR__ . '/includes/partials/auth_top.php';
 <section class="auth__card" aria-labelledby="signin-h">
   <h1 id="signin-h">Sign in</h1>
   <p class="auth__lede">Use your library account to borrow and track books.</p>
+  <?php if(input('restored')==='1'): ?><p class="alert alert--info" role="status">The backup was restored. Sign in using an account from that backup.</p><?php endif; ?>
 
   <?php if ($error): ?><div class="alert alert--error" role="alert"><?= icon('alert') ?><span><?= e($error) ?></span></div><?php endif; ?>
 
@@ -50,7 +51,7 @@ require __DIR__ . '/includes/partials/auth_top.php';
 
 <?php if (config('auth.show_demo_logins') || demo_mode()): ?>
   <div class="auth__demo">
-    <span>Trying the demo?<?php if (demo_mode()): ?> <span class="muted">It's shared with other visitors and resets every day. Please don't use a password from another site here.</span><?php endif; ?></span>
+    <span>Trying the demo?<?php if (demo_mode()): ?> <span class="muted">It's shared with other visitors and resets automatically. Please don't use a password from another site here.</span><?php endif; ?></span>
     <div class="auth__demo-actions">
       <button class="btn btn--outline btn--sm" type="button" data-demo-user="admin" data-demo-pass="admin123">Sign in as librarian</button>
       <button class="btn btn--outline btn--sm" type="button" data-demo-user="alice" data-demo-pass="member123">Sign in as member</button>

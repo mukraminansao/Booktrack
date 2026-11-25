@@ -58,7 +58,7 @@ return [
     ],
     // Shown on the public front page (index.php)
     'project' => [
-        'repo'       => 'https://github.com/mukraminansao/booktrack',
+        'repo'       => 'https://github.com/mukraminansao/Booktrack',
         'author'     => 'Mukramin Bariwa Ansao',
         'author_url' => 'https://www.linkedin.com/in/mukramin-a-001833333',
     ],
@@ -77,6 +77,7 @@ return [
     'uploads' => [
         'max_cover_mb' => 5,
         'max_pdf_mb'   => 30,
+        'max_audio_mb' => 50,
     ],
 
     // Public demo (for a portfolio site anyone can try). Set 'enabled' => true in config.local.php

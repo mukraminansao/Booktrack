@@ -35,14 +35,18 @@
 
   // Arriving back on a list from a book: name the matching card's cover.
   window.addEventListener('pagereveal', function (ev) {
-    if (!ev.viewTransition || document.querySelector('.book-hero')) return;
+    if (!ev.viewTransition) return;
+    // ready rejects when a navigation is skipped or interrupted. Observe it
+    // even when this page has no matching cover, and always release old names.
+    ev.viewTransition.ready.catch(clear);
+    ev.viewTransition.finished.then(clear, clear);
+    if (document.querySelector('.book-hero')) return;
     var from = window.navigation && navigation.activation && navigation.activation.from;
     var m = from && /book\.php\?(?:.*&)?id=(\d+)/.exec(from.url);
     var holder = m && document.querySelector('[data-book="' + m[1] + '"]');
     var cover = holder && holder.querySelector(COVER);
     if (!cover) return;
     tag(cover);
-    ev.viewTransition.finished.finally(clear);
   });
 
   // A page restored from the back/forward cache may still carry an old name.

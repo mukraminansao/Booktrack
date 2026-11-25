@@ -59,7 +59,8 @@ This document explains what BookTrack protects, the attacks it is designed to st
 |---|---|---|
 | SQL injection | Every value that comes from a user goes into SQL as a bound parameter of a PDO prepared statement (emulated prepares are off). The only things written into SQL text are fixed conditions and whole numbers such as page limits | `includes/db.php` |
 | Uploading code | Uploads are checked by their real content (image headers, the `%PDF-` signature), not their names, and get random file names. `uploads/` can't run PHP or scripts | `store_cover()`, `uploads/.htaccess` |
-| Reading private files | PDFs are served only through `read.php` to signed-in users, with a path check against the PDF folder. `includes/`, `database/`, `storage/`, `tests/`, `tools/` and the config are blocked from the web | `read.php`, `.htaccess` files |
+| Reading private files | PDFs and recordings are served through signed-in endpoints. Resolved paths must stay within the exact private media folder, with a trailing-slash containment check; both formats support bounded byte ranges and release the session lock while streaming. Cache validators recheck updated media. Reading progress and bookmarks are account-scoped. `includes/`, `database/`, `storage/`, `tests/`, `tools/` and the config are blocked from the web | `read.php`, `audio.php`, `api/reading.php`, `.htaccess` files |
+| Malicious recovery archive | Librarian-only review, CSRF, current-password check and typed confirmation precede restore. A data-only TAR allowlist, exact table columns, bounded sizes, attachment hashes and path validation reject unexpected content. Restore uses a transaction, file rollback copies and a safety archive, and invalidates old sessions. No SQL or code from an archive is executed | `includes/backups.php`, `admin/backups.php` |
 | Making the server fetch other sites (SSRF) | Cover downloads only accept Open Library cover URLs, with size limits and timeouts | `includes/covers.php` |
 | Header injection in emails | Line breaks are removed from every email header value | `includes/mailer.php` |
 | Covering tracks | An activity log records every change to books, loans, fees, members and security settings, with who made it | `log_activity()` |
@@ -68,8 +69,8 @@ This document explains what BookTrack protects, the attacks it is designed to st
 
 These are trade-offs or work for later, written down so nobody assumes otherwise.
 
-- **Two-step secrets are stored as they are.** The server must read them to check codes, so someone with a full copy of the database could generate codes. Encrypting them with a key kept outside the database would close this.
-- **Other devices stay signed in after a password change or reset.** Sessions are PHP files, not a list BookTrack can revoke. Sessions end when the browser closes or PHP clears them.
+- **Key custody still matters.** TOTP secrets use AES-256-GCM with an installation key outside the database and data archive. Existing secrets migrate automatically. Local development stores the key under the denied `storage/keys/` folder. Production should move that same key outside the web root or use a secret-store environment variable. Losing the key prevents recovery of enrolled authenticators; keep a separate secure key copy.
+- **Session revocation applies on the next request.** Password changes and resets rotate a per-account session generation, including pending two-step sign-ins. A member changing their own password keeps only that current session. Revocation cannot erase content already displayed on another device.
 - **Inline styles are allowed** (`style-src 'unsafe-inline'`), because some layouts set styles in the HTML. Scripts are fully locked down; styles alone can't run code.
 - **Email addresses aren't verified** at sign-up. Password reset links only go to the address already on the account.
 - **Rate limits use the connection's IP address.** Behind a proxy or CDN everyone may share one address; the proxy's real-IP header would need to be trusted first.
@@ -85,7 +86,7 @@ These are trade-offs or work for later, written down so nobody assumes otherwise
 4. Turn on two-step sign-in for every librarian, then set `'require_2fa_for_librarians' => true`.
 5. Set up real email (SMTP) so password resets and reminders reach people, instead of the `log` driver.
 6. Make sure `storage/`, `includes/`, `database/`, `tests/` and `tools/` can't be opened in a browser.
-7. Back up the database regularly, and keep the backups as private as the database itself.
+7. Back up the database and original attachments regularly using **Backups** or `php tools/backup.php create`. Browser TAR downloads contain private records and password hashes and are not encrypted. Use `php tools/backup.php create-encrypted` for an encrypted export, configure a separate backup copy, and keep the installation key separately; see `HARDENING.md`. Test recovery on a separate installation. PHP's development server does not enforce `.htaccess`; use Apache with overrides enabled for the live library.
 
 ## Emergency: a librarian is locked out
 
@@ -100,3 +101,11 @@ Members who lose their phone can ask a librarian, who turns it off at **Desk** a
 ## Reporting a vulnerability
 
 Please email **mukraminansao@gmail.com** with what you found and how to reproduce it. Please don't open a public issue for security problems. You'll get a reply within a few days.
+
+## Hardening and recovery boundaries
+
+BookTrack serializes app writes with a local operation lock and, on MySQL, a named database lock. A separate recovery gate keeps requests out while a restore replaces records and attachments. This supports the current single application server; multiple application servers require a shared lock directory for the recovery gate. Direct SQL tools, external scripts and filesystem edits bypass these locks and must be stopped during recovery.
+
+Catalogue, media and member editors reject stale form versions. Reader saves carry a file revision and an acknowledged progress version; a stale tab receives a conflict instead of overwriting a newer saved place. Replacing a PDF or recording resets member progress/bookmarks for that format; PDF chapter markers are also cleared on replacement. The media editor verifies page counts with local PDF.js and audio duration with native browser metadata before submitting chapter bounds. These metadata fields prevent staff mistakes; they are not an independent server-side media decoder. Invalid old markers are disabled at playback.
+
+Restore verifies copied and rolled-back attachment hashes. If rollback itself fails, recovery material is retained and its location is recorded in the private server log. This protects recoverable bytes; database and filesystem changes cannot be made one indivisible transaction across a machine crash. A restore drill and filesystem fault testing remain part of host acceptance.

@@ -153,6 +153,7 @@ function complete_password_reset(string $token, string $password, string $confir
         if (!$claimed) return null;
         q('UPDATE password_resets SET used_at = ? WHERE user_id = ? AND used_at IS NULL', [$now, $reset['user_id']]);
         q('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($password, PASSWORD_DEFAULT), $reset['user_id']]);
+        revoke_user_sessions((int)$reset['user_id']);
         login_attempts_sql('DELETE FROM login_attempts WHERE username = ?', [$reset['username']]);
         q('INSERT INTO activity_log (user_id, actor, action, details, created_at) VALUES (?, ?, ?, ?, ?)',
             [$reset['user_id'], $reset['username'], 'user.password_reset', $reset['name'] . ' (@' . $reset['username'] . ')', $now]);

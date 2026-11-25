@@ -41,6 +41,8 @@ $canBorrow = (int)$book['available'] > 0 || $holdReady;   // a ready hold keeps 
 $queue = hold_queue_length((int)$book['id']);
 $heldIds = $isMember ? array_map('intval', array_column(member_active_loans($uid), 'book_id')) : [];
 $fav = $isMember && is_favorite($uid, (int)$book['id']);
+$readingProgress = progress_for($uid,(int)$book['id'],'ebook');
+$bookAudio = media_for((int)$book['id']);
 $summary = rating_summary((int)$book['id']);
 $myReview = $isMember ? member_review($uid, (int)$book['id']) : null;
 $canReview = $isMember && can_review($uid, (int)$book['id']);
@@ -68,7 +70,7 @@ $title = $book['title'];
 $active = $isMember ? 'discover' : 'books';
 require __DIR__ . '/includes/partials/header.php';
 ?>
-<a class="back-link" href="<?= e(url($isMember ? 'discover.php' : 'admin/books.php')) ?>"><?= icon('arrow-left') ?> <span>Back to <?= $isMember ? 'catalogue' : 'books' ?></span></a>
+<a class="back-link" href="<?= e(url($isMember ? 'discover.php?view=all' : 'admin/books.php')) ?>"><?= icon('arrow-left') ?> <span>Back to <?= $isMember ? 'catalogue' : 'books' ?></span></a>
 
 <section class="book-hero">
   <?= cover_ambient($book) ?>
@@ -143,8 +145,9 @@ require __DIR__ . '/includes/partials/header.php';
       </form>
 
       <?php if ($book['pdf']): ?>
-        <a class="btn btn--outline btn--lg" href="<?= e(url('read.php', ['id' => $book['id']])) ?>" target="_blank" rel="noopener"><?= icon('file') ?> Read e-book</a>
+        <a class="btn btn--outline btn--lg" href="<?= e(reading_url($book)) ?>"><?= icon('file') ?> <?= $readingProgress && !$readingProgress['completed'] ? 'Continue reading' : 'Read e-book' ?></a>
       <?php endif; ?>
+      <?php if (!empty($bookAudio['audio_file'])): ?><a class="btn btn--outline btn--lg" href="<?= e(reading_url($book,'audio')) ?>">Listen to audiobook</a><?php endif; ?>
       <button class="btn btn--outline btn--lg btn--share" type="button" data-share hidden><?= icon('share') ?> Share</button>
     </div>
     <?php else: ?>
@@ -166,6 +169,10 @@ require __DIR__ . '/includes/partials/header.php';
     </dl>
   </div>
 </section>
+
+<?php if ($readingProgress): ?><p class="reading-account-progress"><?= $readingProgress['completed'] ? 'Finished' : 'Your place: page '.(int)$readingProgress['position'] ?><?= (int)$readingProgress['total'] ? ' of '.(int)$readingProgress['total'] : '' ?> · <a class="link" href="<?= e(reading_url($book)) ?>">Open your reader</a></p><?php endif; ?>
+
+<?php if (!empty($bookAudio['audio_file'])): ?><section aria-label="Audiobook"><?= audiobook_html($book) ?><a class="link" href="<?= e(reading_url($book,'audio')) ?>">Open chapters and bookmarks</a></section><?php endif; ?>
 
 <section class="ratings" id="reviews" aria-labelledby="reviews-h">
   <div class="section-title">

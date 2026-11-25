@@ -61,6 +61,8 @@ require __DIR__ . '/../includes/partials/header.php';
     <p><?= e(date('l, j F Y')) ?></p>
   </div>
   <div class="row row--wrap">
+    <a class="btn btn--outline" href="<?= e(url('admin/content.php')) ?>">Content & audio</a>
+    <a class="btn btn--outline" href="<?= e(url('admin/backups.php')) ?>">Backups</a>
     <a class="btn btn--outline" href="<?= e(url('admin/desk.php')) ?>"><?= icon('scan') ?> Scan a card</a>
     <a class="btn" href="<?= e(url('admin/loans.php', ['issue' => 1])) ?>"><?= icon('swap') ?> Issue a book</a>
   </div>

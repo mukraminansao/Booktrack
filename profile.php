@@ -71,9 +71,8 @@ if (is_post()) {
         if (strlen($new) > 72) $errors['password'][] = 'The new password can be at most 72 characters.';
         if ($new !== ($_POST['confirm_password'] ?? '')) $errors['password'][] = 'The new passwords don\'t match.';
         if (!$errors['password']) {
-            q('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($new, PASSWORD_DEFAULT), $uid]);
+            transaction(function()use($new,$uid,$user){q('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash($new, PASSWORD_DEFAULT), $uid]);revoke_user_sessions($uid,true);log_activity('user.password_changed', $user['username']);});
             session_regenerate_id(true); // invalidate any copy of the old session cookie
-            log_activity('user.password_changed', $user['username']);
             flash('success', 'Password changed.');
             redirect('profile.php');
         }

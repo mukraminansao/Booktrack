@@ -9,7 +9,7 @@ CREATE DATABASE IF NOT EXISTS `booktrack_v2` DEFAULT CHARACTER SET utf8mb4 COLLA
 USE `booktrack_v2`;
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS two_factor, fines, password_resets, reviews, reminder_log, holds, login_attempts, activity_log, chat_messages, messages, favorites, loans, books, users;
+DROP TABLE IF EXISTS reading_bookmarks, reading_progress, book_chapters, book_media, collection_books, collections, app_settings, two_factor, fines, password_resets, reviews, reminder_log, holds, login_attempts, activity_log, chat_messages, messages, favorites, loans, books, users;
 SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE users (
@@ -169,7 +169,7 @@ CREATE TABLE fines (
 -- Two-step sign-in (authenticator app). Recovery codes are stored as SHA-256 hashes.
 CREATE TABLE two_factor (
   user_id        INT UNSIGNED PRIMARY KEY,
-  secret         VARCHAR(64) NOT NULL,
+  secret         TEXT NOT NULL,
   last_step      BIGINT NOT NULL DEFAULT 0,
   recovery_codes TEXT NOT NULL,
   enabled_at     DATETIME NOT NULL,

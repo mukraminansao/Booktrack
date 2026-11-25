@@ -5,5 +5,5 @@ services:
     runtime: docker
     plan: free
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /login.php
+    healthCheckPath: /health.php
     autoDeploy: true

@@ -1,0 +1,227 @@
+/* Member routes extend the approved editorial home. Admin never loads this file. */
+.reading-home.member-page {
+ --rail:var(--paper); --rail-border:var(--border); --glass:var(--paper-light); --glass-strong:var(--paper-light);
+ --gold-hover:#927a32; --gold-ink:#fffef5; --gold-soft:#ac93451c;
+ --green:#42633c; --green-soft:#e6eddf; --blue:#4f6556; --blue-soft:#e5ebe4;
+ --red:#9d3c30; --red-solid:#9d3c30; --red-soft:#f6e7e0;
+ --shadow-cover:4px 8px 18px #39332529; --shadow:0 12px 32px #39332512;
+ font-size:15px; line-height:1.55; padding:40px 0;
+}
+.member-page .app {width:min(92vw,1360px);aspect-ratio:auto;min-height:calc(100dvh - 80px);overflow:clip;border-radius:28px;align-items:stretch}
+.member-page .sidebar {width:78px;flex-shrink:0;align-self:flex-start;margin:20px 0;padding:0 0 16px;position:sticky;top:60px;height:calc(100dvh - 120px);min-height:480px}
+.member-page .sidebar .brand .logo-mark {width:22px;height:22px}
+.member-page .nav {margin-top:90px;gap:10px;transform:none;align-items:center}
+.member-page .nav a,.member-page .nav__icon {width:44px;height:44px;min-width:44px;min-height:44px}
+.member-page .nav__icon .icon {width:20px;height:20px;stroke-width:1.3}
+.member-page .rail-user {transform:none;align-items:center}
+.member-page .rail-signout {width:44px;height:44px;min-height:44px}
+.member-page .shell {background:var(--paper-light);min-width:0}
+.member-page .topbar {height:76px;padding:0 36px;gap:20px;background:linear-gradient(to right,var(--paper) 56%,var(--paper-light) 56%)}
+.member-page .reading-search {width:min(55%,560px);transform:none;gap:10px}
+.member-page .reading-search>.icon {width:17px;height:17px}
+.member-page .reading-search input {font-size:13px;padding:12px 0;min-height:44px}
+.member-page .reading-profile {font-size:12px;width:164px;min-width:164px;gap:10px}
+.member-page .reading-profile .avatar {width:34px;height:34px;font-size:12px}
+.member-page .topbar__btn {width:44px;height:44px;min-height:44px}
+.member-page .topbar__btn .icon {width:18px;height:18px}
+.member-page .topbar__btn .count {width:15px;min-width:15px;height:15px;line-height:15px;font-size:10px;top:0;right:0}
+.member-page .main {display:flex;flex-direction:column;gap:32px;max-width:none;margin:0;padding:36px 40px 48px;min-width:0;background:var(--paper);flex:1}
+.member-page h1 {font-size:clamp(32px,3.2vw,46px);line-height:1.08;font-weight:400;overflow-wrap:anywhere}
+.member-page h2 {font-size:28px;line-height:1.2;letter-spacing:-.025em;font-weight:400}
+.member-page h3 {font-family:var(--font-display);font-size:22px;font-weight:400;color:var(--ink)}
+.member-page .page-head {gap:20px;align-items:center}
+.member-page .page-head__title {gap:10px;min-width:0}
+.member-page .page-head p {font-size:14px;max-width:72ch;color:var(--quiet)}
+.member-page .page-head--discover>.search {display:none}
+.member-page .back-link {font-size:13px;color:var(--quiet);align-self:flex-start}
+.member-page .main>.stack,.member-page .stack>* {min-width:0}
+.member-page .btn {background:var(--ink);border-color:var(--ink);color:var(--paper-light);font-weight:500;min-height:44px;padding:10px 20px;box-shadow:none}
+.member-page .btn:hover {background:#454637;border-color:#454637;color:#fffef7}
+.member-page .btn--outline {background:transparent;border-color:var(--border-strong);color:var(--ink)}
+.member-page .btn--ghost {background:transparent;border-color:transparent;color:var(--text-2)}
+.member-page .btn--outline:hover,.member-page .btn--ghost:hover {background:var(--surface-2);border-color:var(--border-strong);color:var(--ink)}
+.member-page .btn--danger {background:var(--red);color:#fff;border-color:var(--red)}
+.member-page .btn--icon {padding:10px}
+.member-page .btn--sm {font-size:13px;padding:8px 14px}
+.member-page .btn--lg {font-size:14px;padding:12px 20px}
+.member-page .input,.member-page .select,.member-page textarea {background:var(--paper-light);border-color:var(--border-strong);color:var(--ink);min-height:44px}
+.member-page .input:focus,.member-page .select:focus,.member-page textarea:focus {border-color:var(--focus);box-shadow:0 0 0 3px #a69a4d20}
+.member-page .chip {background:transparent;border:1px solid var(--border);color:var(--text-2);min-height:40px;padding:8px 16px;font-size:13px;box-shadow:none}
+.member-page .chip[aria-current=true],.member-page .chip.is-active {background:var(--ink);border-color:var(--ink);color:var(--paper-light)}
+.member-page .chip:hover {border-color:var(--gold);background:var(--surface-2);color:var(--ink)}
+.member-page .chips {padding-bottom:4px}
+.member-page .card {background:var(--paper-light);border:1px solid var(--border);border-radius:16px;box-shadow:none}
+.member-page .book-grid {grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:36px 28px}
+.member-page .book-card {gap:8px;min-width:0;max-width:200px}
+.member-page .book-card__cover {margin:0 4px 8px 0;border-radius:1px}
+.member-page .book-card__cover .cover {border-radius:1px;box-shadow:4px 6px 10px #3d38252b;aspect-ratio:2/3;object-fit:cover}
+.member-page .book-card__title {font-weight:500;font-size:14px;line-height:1.35}
+.member-page .book-card__author {font-size:12px;color:var(--quiet)}
+.member-page .book-card__rating {font-size:12px;color:var(--gold-text)}
+.member-page .book-card__fav {background:var(--paper-light);color:var(--red);width:44px;height:44px;backdrop-filter:none;box-shadow:0 2px 8px #38342520}
+.member-page .status {font-size:12px;gap:6px}
+.member-page .status::before {width:5px;height:5px}
+.member-page .book-hero {grid-template-columns:minmax(180px,250px) minmax(0,1fr);gap:44px;align-items:start}
+.member-page .book-hero>.ambient {display:none}
+.member-page .book-hero__cover {padding:12px;max-width:260px;transform:none!important}
+.member-page .book-hero__cover .cover {border-radius:2px;box-shadow:8px 14px 22px #3933252e}
+.member-page .book-hero h1 {font-size:clamp(32px,3.8vw,52px)}
+.member-page .book-hero__author {font-size:16px}
+.member-page .book-hero__category {font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-text)}
+.member-page .book-actions {gap:10px}
+.member-page .book-actions form {max-width:100%}
+.member-page .prose {font-size:15px;line-height:1.8;max-width:65ch;color:var(--text-2)}
+.member-page .meta-list {font-size:13px;gap:12px 24px;border-top:1px solid var(--border);padding-top:20px}
+.member-page .shelf-row {grid-auto-columns:minmax(140px,calc((100% - 5 * 24px)/6));gap:24px;padding:8px 8px 18px 0}
+.member-page .badge {font-size:12px;font-weight:500;padding:6px 10px;white-space:normal}
+.member-page .badge::before {width:5px;height:5px;flex-shrink:0}
+.member-page .alert--error {background:var(--red-soft);border-color:#9d3c3029;color:var(--red)}
+.member-page .alert--info {background:var(--blue-soft);border-color:var(--border);color:var(--blue)}
+.member-page .alert--warn {border-color:var(--border-strong);color:var(--gold-text)}
+.member-page .loan-list {grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:18px}
+.member-page .loan-card {background:var(--paper-light);border:1px solid var(--border);border-radius:14px;padding:22px;gap:18px;min-width:0}
+.member-page .loan-card__body {min-width:0}
+.member-page .loan-card__title {font-family:var(--font-display);font-size:23px;font-weight:400;overflow-wrap:anywhere}
+.member-page .loan-card__due {font-size:12px;font-weight:500}
+.member-page .loan-card .cover-md {width:64px;border-radius:1px;box-shadow:3px 5px 10px #39332525}
+.member-page .loan-card__actions {flex-shrink:0}
+.member-page .progress {height:3px;background:var(--border)}
+.member-page .table th {background:var(--surface-2);font-weight:500;font-size:12px;color:var(--text-2)}
+.member-page .table td {font-size:13px;padding:18px}
+.member-page .table .cell-book {min-width:0;gap:12px}
+.member-page .table .cell-book strong {font-weight:500}
+.member-page .table .cover-sm {border-radius:1px;box-shadow:2px 4px 8px #39332525}
+.member-page .empty {padding:48px 24px;color:var(--quiet)}
+.member-page .empty h3 {font-size:27px;color:var(--ink)}
+.member-page .reviews-layout {grid-template-columns:minmax(200px,260px) minmax(0,1fr);gap:40px}
+.member-page .reviews-layout__side {top:24px}
+.member-page .review__name {font-weight:500}
+.member-page .rating-summary {background:var(--paper-light)}
+.member-page .review-prompt {background:var(--paper-light);border-color:var(--border)}
+.member-page .profile-tally {font-size:13px;gap:8px 20px}
+.member-page .avatar--lg {background:var(--surface-2);color:var(--ink);font-family:var(--font-display);font-weight:400}
+.member-page .libcard {color:#fffef2;background:linear-gradient(135deg,#737044,#464b34);border-color:#7c7b53;box-shadow:0 14px 24px -16px #39332580}
+.member-page .libcard__kind,.member-page .libcard__since {color:#eeeddb}
+.member-page .libcard__name {font-weight:400;font-size:30px}
+.member-page .libcard__brand {font-weight:400}
+.member-page .libcard__label {background:#fffef9;color:#272720}
+.member-page .segmented {background:var(--surface-2);border-color:var(--border)}
+.member-page .segmented button {min-height:44px}
+.member-page a.rsum__row {min-height:36px}
+.member-page .segmented button[aria-pressed=true] {background:var(--paper-light);color:var(--ink);box-shadow:0 1px 6px #39332515}
+.member-page .twofa__key,.member-page .recovery {border-color:var(--border-strong)}
+.member-page .recovery__codes {grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}
+.member-page.page-chat .main {padding:24px;gap:0}
+.member-page .chat {height:calc(100dvh - 208px);min-height:500px;background:var(--paper-light);border-color:var(--border);border-radius:14px}
+.member-page .chat__head {padding:18px 22px;background:var(--paper-light)}
+.member-page .chat__avatar--library {background:var(--surface-2);border-color:var(--border)}
+.member-page .chat__who strong {font-size:24px;font-weight:400}
+.member-page .chat__scroll {background:var(--paper)}
+.member-page .msg--mine .msg__bubble {background:#636949;color:#fffef5}
+.member-page .msg--theirs .msg__bubble {background:var(--paper-light);border-color:var(--border);color:var(--ink)}
+.member-page .chat__composer {background:var(--paper-light)}
+.member-page .chat__input textarea {background:var(--paper);border-color:var(--border);color:var(--ink)}
+.member-page .chat__send {background:var(--ink);color:var(--paper-light)}
+.member-page .chat__hint {color:var(--quiet)}
+.member-page .modal,.member-page .palette,.member-page .reminders {background:var(--paper-light);border-color:var(--border);color:var(--ink);box-shadow:0 24px 80px #29291d30}
+.member-page .modal__head h2 {font-size:28px}
+.member-page dialog.card-dialog {background:#fff;color:#272720;border:0}
+.member-page .card-dialog h2 {color:#272720}
+.member-page .card-dialog__close {color:#272720;background:transparent}
+.member-page .card-dialog__close:hover {color:#272720;background:#efeee5}
+.member-page .flash {background:var(--paper-light);color:var(--ink);border-color:var(--border)}
+.member-page .flash--error {background:var(--red-soft);color:var(--red)}
+.member-page .flash__undo button {color:var(--gold-text)}
+.member-page .reading-menu {font-size:14px}
+[data-theme=dark] .member-page {
+ --paper:#24291f;--paper-light:#1a2018;--ink:#f1eee2;--quiet:#c4c5b8;
+ --text:var(--ink);--text-2:#d5d5c8;--muted:var(--quiet);--faint:#b8baae;
+ --surface:#1a2018;--surface-2:#353d2e;--surface-sunk:#1a2018;
+ --border:#48513e;--border-strong:#6e785d;--gold:#c6b36d;--gold-text:#e0ce8c;--gold-soft:#c6b36d20;--focus:#dfce8d;
+ --green:#bfd3aa;--green-soft:#303f29;--red:#f1b3a0;--red-soft:#442d25;--blue:#b9ceb8;--blue-soft:#2a3c2d;
+ background:#12180f;
+}
+[data-theme=dark] .member-page .app {border-color:#3a4233}
+[data-theme=dark] .member-page .btn--danger {background:#9d3c30;color:#fff}
+[data-theme=dark] .member-page .book-card__cover .cover {box-shadow:4px 8px 14px #0005}
+@media(max-width:1100px){
+ .member-page .main {padding:28px;gap:28px}
+ .member-page .topbar {padding:0 28px}
+ .member-page .book-hero {grid-template-columns:200px minmax(0,1fr);gap:28px}
+ .member-page .reviews-layout {gap:24px;grid-template-columns:200px minmax(0,1fr)}
+}
+@media(min-width:768px) and (max-width:1000px){
+ .member-page .sidebar {width:64px;display:flex;position:sticky;inset:auto;top:60px;box-shadow:none;transform:none}
+ .member-page .app {width:94vw;min-height:calc(100dvh - 80px)}
+ .member-page .book-grid {grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:28px 22px}
+}
+@media(max-width:767px){
+ .reading-home.member-page {padding:12px 0 90px}
+ .member-page .app {width:calc(100% - 24px);min-height:calc(100dvh - 102px);border-radius:20px}
+ .member-page .sidebar {display:none}
+ .member-page .topbar {height:auto;min-height:100px;padding:12px 18px;gap:8px;background:var(--paper-light)}
+ .member-page .reading-search {width:100%;gap:8px}
+ .member-page .reading-search input {font-size:13px}
+ .member-page .reading-profile {width:auto;min-width:0;max-width:calc(100% - 52px);font-size:12px;gap:8px}
+ .member-page .reading-profile .avatar {width:28px;height:28px;font-size:10px}
+ .member-page .main {padding:24px 20px 32px;gap:26px}
+ .member-page h1 {font-size:34px}
+ .member-page h2 {font-size:26px}
+ .member-page .page-head {align-items:flex-start}
+ .member-page .page-head__title {width:100%;flex-basis:100%}
+ .member-page .page-head p {font-size:13px}
+ .member-page .section-title {gap:12px;flex-wrap:wrap}
+ .member-page .section-title>form {width:100%;gap:12px}
+ .member-page .section-title .select {max-width:100%}
+ .member-page .chips {max-width:100%;width:100%;gap:8px}
+ .member-page .chip {min-height:44px;font-size:12px;padding:10px 14px;flex-shrink:0}
+ .member-page .book-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 18px}
+ .member-page .book-card__title {font-size:13px}
+ .member-page .book-card__author,.member-page .status {font-size:11px}
+ .member-page .book-card__fav {top:5px;right:5px;width:44px;height:44px}
+ .member-page .book-hero {grid-template-columns:minmax(0,1fr);gap:26px;margin-top:0}
+ .member-page .book-hero__cover {width:155px;justify-self:center;padding:0}
+ .member-page .book-hero h1 {font-size:36px}
+ .member-page .book-hero__author {font-size:15px}
+ .member-page .book-actions {align-items:stretch;gap:10px}
+ .member-page .book-actions>* {flex:1 1 100%}
+ .member-page .book-actions .btn {width:100%;font-size:13px;flex-direction:row;gap:10px;min-height:44px;height:auto;padding:12px 16px;border-radius:999px}
+ .member-page .meta-list {grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;font-size:12px}
+ .member-page .shelf-row {grid-auto-columns:42%;gap:18px}
+ .member-page .loan-card {padding:16px;gap:12px;flex-wrap:wrap}
+ .member-page .loan-card__body {flex:1;min-width:0}
+ .member-page .loan-card__title {font-size:21px}
+ .member-page .loan-card .cover-md {width:46px}
+ .member-page .loan-card__actions {width:100%;display:flex;flex-direction:row;gap:8px}
+ .member-page .loan-card__actions>form {flex:1}
+ .member-page .table td {padding:12px 14px}
+ .member-page .table .cell-book {min-width:0}
+ .member-page .reviews-layout {grid-template-columns:minmax(0,1fr);gap:28px}
+ .member-page a.rsum__row {min-height:44px}
+ .member-page .back-link {min-width:44px;min-height:44px}
+ .member-page .reviews-layout__side {position:static}
+ .member-page .reviews-toolbar {width:100%}
+ .member-page .reviews-head__book {align-items:flex-start;min-width:0}
+ .member-page .libcard-wrap {width:100%}
+ .member-page .libcard {padding:14px;aspect-ratio:auto;min-height:220px}
+ .member-page .libcard__name {font-size:26px}
+ .member-page .libcard__brand {font-size:13px}
+ .member-page .libcard__kind {font-size:10px}
+ .member-page .libcard__digits {font-size:18px}
+ .member-page .libcard__qr {width:64px;height:64px}
+ .member-page .card {padding:20px}
+ .member-page .card--flush {padding:0}
+ .member-page .twofa__steps {min-width:0}
+ .member-page.page-chat .main {padding:0;gap:0}
+ .member-page .chat {height:calc(100dvh - 230px);min-height:420px;border:0;border-radius:0}
+ .member-page .chat__head {padding:16px}
+ .member-page .chat__who strong {font-size:23px}
+ .member-page .chat__who span {font-size:11px}
+ .member-page .chat__scroll {padding:16px 14px}
+ .member-page .chat__composer {padding:12px}
+ .member-page .msg {max-width:88%}
+ .member-page .chat__hint {font-size:10px;padding:0}
+ .member-page .tabbar a {min-height:56px}
+ .member-page .modal__body {padding:20px}
+ .member-page .modal__foot {padding:16px 20px;flex-wrap:wrap}
+}

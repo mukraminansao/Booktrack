@@ -226,8 +226,12 @@
     // ---- "/" jumps to the page's search box
     document.addEventListener('keydown', (ev) => {
       if (ev.key !== '/' || ev.ctrlKey || ev.metaKey || ev.target.closest('input, textarea, select, [contenteditable]')) return;
-      const s = $('.search input');
+      const s = $$('.search input, .reading-search input').find((el) => el.offsetParent);
       if (s) { ev.preventDefault(); s.focus(); }
+      else {
+        const trigger = $$('[data-palette-open]').find((el) => el.offsetParent);
+        if (trigger) { ev.preventDefault(); trigger.click(); }
+      }
     });
   });
 
@@ -862,7 +866,9 @@
       root.dataset.theme = theme;
       document.cookie = 'bt_theme=' + theme + '; path=/; max-age=31536000; samesite=lax';
       const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.content = theme === 'light' ? '#EDF0F4' : '#0E1420';
+      if (meta) meta.content = document.body.classList.contains('reading-home')
+        ? (theme === 'light' ? '#F8F4EB' : '#1A2018')
+        : (theme === 'light' ? '#EDF0F4' : '#0E1420');
       const scheme = document.querySelector('meta[name="color-scheme"]');
       if (scheme) scheme.content = theme;
       document.querySelectorAll('[data-theme-set]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.themeSet === theme ? 'true' : 'false'));
@@ -1110,8 +1116,33 @@
     // ---- Ctrl+K jumps to the page's search box (no pop-up on desktop)
     document.addEventListener('keydown', (ev) => {
       if (!(ev.ctrlKey || ev.metaKey) || ev.key.toLowerCase() !== 'k') return;
-      const box = document.querySelector('.page-head .search input, .toolbar .search input');
-      if (box && box.offsetParent) { ev.preventDefault(); box.focus(); box.select(); }
+      const box = Array.from(document.querySelectorAll('.page-head .search input, .toolbar .search input, .reading-search input')).find((el) => el.offsetParent);
+      if (box) { ev.preventDefault(); box.focus(); box.select(); }
+      else {
+        const trigger = Array.from(document.querySelectorAll('[data-palette-open]')).find((el) => el.offsetParent);
+        if (trigger) { ev.preventDefault(); trigger.click(); }
+      }
+    });
+  });
+})();
+
+
+// Reading surfaces progressively animate on entry; off-screen content stays visible.
+(function () {
+  'use strict';
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!document.body.classList.contains('reading-home') ||
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+        !('IntersectionObserver' in window)) return;
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-entering');
+        observer.unobserve(entry.target);
+      });
+    }, {threshold: 0.06});
+    document.querySelectorAll('.reading-greeting, .reading-art, .reading-feature, .reading-popular, .reading-utilities > section, .reading-collection').forEach(function (element) {
+      observer.observe(element);
     });
   });
 })();

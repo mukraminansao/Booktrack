@@ -103,12 +103,23 @@ function csrf_field(): string
 /** Validate the CSRF token on every POST. Accepts the form field or the X-CSRF-Token header. */
 function verify_csrf(): void
 {
+    reject_oversized_request();
     $sent = $_POST['_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
     if (!is_string($sent) || !hash_equals(csrf_token(), $sent)) {
         if (wants_json()) json_out(['ok' => false, 'error' => 'Your session expired. Refresh the page and try again.'], 419);
         http_response_code(419);
         flash('error', 'Your session expired. Please try again.');
         back('index.php');
+    }
+}
+/** Runs before sessions/auth: PHP discards every form field when post_max_size is exceeded. */
+function reject_oversized_request():void
+{
+    $limit=ini_bytes((string)ini_get('post_max_size'));
+    if($limit>0&&(int)($_SERVER['CONTENT_LENGTH']??0)>$limit){
+        if(wants_json())json_out(['ok'=>false,'error'=>'The upload exceeds this server’s form limit. Choose a smaller file.'],413);
+        http_response_code(413);header('Cache-Control: no-store');
+        exit('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Upload too large | BookTrack</title><body style="font-family:system-ui;background:#f1efe3;color:#201f1a;padding:32px"><main style="max-width:560px;margin:10vh auto"><h1>That upload is too large</h1><p>Choose a file smaller than the server form limit of '.e(ini_get('post_max_size')).', then submit it again.</p><a href="'.e(url('admin/content.php')).'">Back to library content</a></main></body></html>');
     }
 }
 
@@ -207,7 +218,14 @@ function cover_html(array $book, string $class = 'cover'): string
 {
     $title = e($book['title'] ?? '');
     if (!empty($book['cover']) && is_file(dirname(__DIR__) . '/' . ltrim((string) $book['cover'], '/'))) {
-        return '<img class="' . e($class) . '" src="' . e(url($book['cover'])) . '" alt="Cover of ' . $title . '" loading="lazy" decoding="async">';
+        $source = (string)$book['cover'];
+        // Prebuilt derivatives keep book shelves quick; custom uploads still fall back to their original.
+        $preview = 'uploads/covers/previews/' . pathinfo($source, PATHINFO_FILENAME) . '.webp';
+        if (str_starts_with($source, 'uploads/covers/') && is_file(APP_ROOT . '/' . $preview)
+            && filemtime(APP_ROOT . '/' . $preview) >= filemtime(APP_ROOT . '/' . $source)) {
+            $source = $preview;
+        }
+        return '<img class="' . e($class) . '" src="' . e(url($source)) . '" alt="Cover of ' . $title . '" loading="lazy" decoding="async">';
     }
     // one of five jacket layouts, picked from the title so a book always looks the same
     $variant = crc32('v' . ($book['title'] ?? '') . ($book['author'] ?? '')) % 5;
@@ -273,7 +291,12 @@ function icon(string $name, string $class = 'icon'): string
 {
     static $paths = [
         'compass'  => '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+        'home'     => '<path d="M4 10l8-7 8 7v10H4z"/><path d="M9 20v-7h6v7"/>',
+        'bookmark' => '<path d="M6 3h12v18l-6-4-6 4z"/><path d="M9 6h6"/>',
+        'settings' => '<path d="M9 3h6l.7 3 2.8 1 2.2 2.3-1.7 2.6 1.7 2.7-2.2 2.3-2.8 1-.7 3H9l-.7-3-2.8-1-2.2-2.3L5 12 3.3 9.3 5.5 7l2.8-1z"/><circle cx="12" cy="12" r="3"/>',
         'book'     => '<path d="M2 5h6a4 4 0 0 1 4 4v11a3 3 0 0 0-3-3H2z"/><path d="M22 5h-6a4 4 0 0 0-4 4v11a3 3 0 0 1 3-3h7z"/>',
+        'library'  => '<rect x="4" y="3" width="16" height="18" rx=".5"/><path d="M8 3v18"/>',
+        'stopwatch'=> '<circle cx="12" cy="14" r="8"/><path d="M10 2h4M12 6V3M18 5l2 2M12 14l3-4"/>',
         'books'    => '<path d="M4 4h4v16H4zM10 4h4v16h-4z"/><path d="M15.5 5.2l3.4-.9 3.1 15.1-3.4.9z"/>',
         'heart'    => '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
         'message'  => '<path d="M4 5h16v11H8l-4 4z"/>',
@@ -429,9 +452,17 @@ function store_pdf(string $field): ?string
 
 function delete_upload(?string $relPath): void
 {
-    if (!$relPath || !str_starts_with($relPath, 'uploads/')) return;
-    $full = APP_ROOT . '/' . $relPath;
-    if (is_file($full) && !str_contains(basename($relPath), 'seed-')) @unlink($full);
+    if(!$relPath||!preg_match('~^uploads/(covers|pdfs|audio)/[A-Za-z0-9_-]+\.(jpg|jpeg|png|webp|pdf|mp3|m4a|ogg|wav)$~D',$relPath,$match)||str_contains(basename($relPath),'seed-'))return;
+    if(!in_array($match[2],['covers'=>['jpg','jpeg','png','webp'],'pdfs'=>['pdf'],'audio'=>['mp3','m4a','ogg','wav']][$match[1]],true))return;
+    $uploads=realpath(APP_ROOT.'/uploads');$directory=APP_ROOT.'/uploads/'.$match[1];$root=realpath($directory);$full=realpath(APP_ROOT.'/'.$relPath);
+    if(!$uploads||dirname($uploads)!==realpath(APP_ROOT)||!$root||dirname($root)!==$uploads||is_link($directory))return;
+    if($root&&$full&&!is_link(APP_ROOT.'/'.$relPath)&&is_file($full)&&str_starts_with(str_replace('\\','/',$full),str_replace('\\','/',$root).'/')&&!@unlink($full))error_log('BookTrack: unable to remove obsolete upload '.basename($relPath));
+}
+
+function ini_bytes(string $value): int
+{
+    $value=trim($value);if($value===''||$value==='-1')return 0;
+    $number=(float)$value;$suffix=strtolower(substr($value,-1));return (int)min(PHP_INT_MAX,$number*(match($suffix){'g'=>1073741824,'m'=>1048576,'k'=>1024,default=>1}));
 }
 
 function activity_label(string $action): string

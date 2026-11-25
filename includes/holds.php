@@ -70,6 +70,7 @@ function refresh_holds(): void
 /** Expire uncollected holds and hand free copies to the next in line (safe to call any time). */
 function process_hold_queue(): void
 {
+    transaction(function(){
 
     foreach (q_all("SELECT h.id, h.book_id, b.title, u.name FROM holds h JOIN books b ON b.id = h.book_id JOIN users u ON u.id = h.user_id
                     WHERE h.status = 'ready' AND h.expires_at < ?", [today()]) as $h) {
@@ -94,6 +95,7 @@ function process_hold_queue(): void
             if (function_exists('notify_hold_ready')) notify_hold_ready((int)$h['id']);
         }
     }
+    });
 }
 
 function hold_pickup_days(): int
@@ -150,11 +152,13 @@ function place_hold(int $userId, int $bookId): int
 /** Cancel a hold. Members can cancel their own; librarians pass $userId = null. */
 function cancel_hold(int $holdId, ?int $userId): void
 {
+    transaction(function()use($holdId,$userId){
     $hold = q_one('SELECT h.*, b.title, u.name FROM holds h JOIN books b ON b.id = h.book_id JOIN users u ON u.id = h.user_id WHERE h.id = ?', [$holdId]);
     if (!$hold || ($userId !== null && (int)$hold['user_id'] !== $userId)) throw new DomainException('Hold not found.');
     if (!in_array($hold['status'], ['waiting', 'ready'], true)) throw new DomainException('This hold is already closed.');
     q("UPDATE holds SET status = 'cancelled' WHERE id = ?", [$holdId]);
     log_activity('hold.cancelled', ($userId === null ? 'Librarian cancelled ' . $hold['name'] . '\'s' : $hold['name'] . ' cancelled their') . " hold on “{$hold['title']}”");
+    });
 }
 
 /** Open holds for a member: ready ones first (with pick-up date), then the line they're in. */
