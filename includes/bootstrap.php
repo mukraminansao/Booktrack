@@ -39,6 +39,9 @@ if(PHP_SAPI!=='cli'&&config('security.require_https',false)){
         $origin='https://'.$base['host'].(isset($base['port'])?':'.$base['port']:'');
         header('Location: '.$origin.'/'.ltrim($_SERVER['REQUEST_URI']??'/','/'),true,308);exit;
     }
+}
+// TLS is also available in the public demo, without forcing HTTPS on localhost.
+if(PHP_SAPI!=='cli'&&!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off'){
     header('Strict-Transport-Security: max-age=31536000');
 }
 
