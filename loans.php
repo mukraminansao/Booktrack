@@ -160,7 +160,7 @@ require __DIR__ . '/includes/partials/header.php';
     <?= empty_art('shelf') ?>
     <h3>No books on loan</h3>
     <p>You can borrow up to <?= $max ?> books at a time, each for <?= (int)config('library.loan_days') ?> days.</p>
-    <a class="btn btn--sm" href="<?= e(url('discover.php')) ?>">Browse the catalogue</a>
+    <a class="btn btn--sm" href="<?= e(url('discover.php', ['view' => 'all'])) ?>">Browse the catalogue</a>
   </div>
 <?php endif; ?>
 

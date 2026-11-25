@@ -6,6 +6,9 @@ same database as config.php, because the script checks results with PHP CLI.
 import os, re, json, subprocess, pathlib
 import requests  # pip install requests
 ROOT = pathlib.Path(__file__).resolve().parent.parent  # project folder (reads the DB via config.php)
+import sys
+sys.path.insert(0,str(ROOT/'tests'))
+from form_versions import form_version
 B = os.environ.get('BOOKTRACK_URL', 'http://127.0.0.1:8100').rstrip('/')
 ok = fail = 0
 def check(c, m):
@@ -20,6 +23,7 @@ def tok(s, path='/login.php'):
     return m.group(1) if m else ''
 def post(s, path, data=None, files=None, page=None, headers=None):
     d = dict(data or {}); d['_token'] = tok(s, page or path)
+    if 'version' not in d:d['version']=form_version(s,B,path,d)
     return s.post(B + path, data=d, files=files, headers=headers or {})
 def login(u, p):
     s = requests.Session(); r = post(s, '/login.php', {'username': u, 'password': p}); return s, r

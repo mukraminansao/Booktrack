@@ -33,6 +33,19 @@ jobs:
         run: php tests/rules_test.php
       - name: Chat migration
         run: php tests/chat_migration_test.php
+      - name: Reading, media and backup recovery
+        run: php tests/enhancements_test.php
+      - name: Security, failure recovery and concurrent writes
+        run: php tests/hardening_test.php
+      - name: Recovery into a separate installation
+        run: php tests/recovery_drill_test.php
+      - name: Read-only health checks
+        run: php tests/health_test.php
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Progress saving under connection failures
+        run: node tests/reading_state_test.mjs
 
   e2e-sqlite:
     name: End-to-end (SQLite)
@@ -53,16 +66,22 @@ jobs:
 
       - name: Create the SQLite database
         run: |
-          php tests/make_sqlite.php "$RUNNER_TEMP/booktrack.sqlite"
-          echo "BOOKTRACK_SQLITE=$RUNNER_TEMP/booktrack.sqlite" >> "$GITHUB_ENV"
+          mkdir -p tests/runtime
+          php tests/make_sqlite.php "$GITHUB_WORKSPACE/tests/runtime/e2e.sqlite"
+          echo "BOOKTRACK_SQLITE=$GITHUB_WORKSPACE/tests/runtime/e2e.sqlite" >> "$GITHUB_ENV"
 
       - name: Start BookTrack
         run: |
-          php -S 127.0.0.1:8100 > "$RUNNER_TEMP/server.log" 2>&1 &
+          php -d display_errors=0 -d display_startup_errors=0 -d post_max_size=12M -d upload_max_filesize=8M -S 127.0.0.1:8100 > "$RUNNER_TEMP/server.log" 2>&1 &
           for i in $(seq 1 30); do curl -sf "$BOOKTRACK_URL/login.php" > /dev/null && break; sleep 1; done
 
       - name: End-to-end tests
         run: python tests/e2e_test.py
+
+      - name: Reading, media, content and recovery HTTP tests
+        run: |
+          python tests/hardening_http_test.py
+          python tests/enhancements_http_test.py
 
       - name: Server log
         if: failure()
@@ -141,6 +160,15 @@ jobs:
               && password_verify("member123", (string)q_val("SELECT password_hash FROM users WHERE username = ?", ["alice"]));
             echo $ok ? "demo data restored\n" : "demo data NOT restored\n"; exit($ok ? 0 : 1);'
 
+      - name: Isolated MySQL/MariaDB recovery and concurrency
+        env:
+          BOOKTRACK_DB_USER: root
+          BOOKTRACK_DB_PASSWORD: ''
+          BOOKTRACK_TEST_MYSQL: '1'
+        run: |
+          php tests/enhancements_test.php
+          php tests/hardening_test.php
+
       - name: Server log
         if: failure()
         run: cat "$RUNNER_TEMP/server.log"
@@ -160,7 +188,13 @@ jobs:
       - name: Start it
         run: |
           docker run -d --name bt -p 8080:10000 booktrack-demo
-          for i in $(seq 1 60); do curl -fsS http://localhost:8080/login.php >/dev/null 2>&1 && break; sleep 2; done
+          for i in $(seq 1 60); do curl -fsS http://localhost:8080/health.php >/dev/null 2>&1 && break; sleep 2; done
+      - name: Health, warm dashboard and file access checks
+        env:
+          BOOKTRACK_CONTAINER_URL: http://127.0.0.1:8080
+        run: |
+          python3 tests/container_smoke_test.py
+          docker exec -u www-data bt php tools/readiness.php
       - name: Smoke test
         run: |
           python3 - <<'PY'

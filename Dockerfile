@@ -4,9 +4,9 @@
 FROM php:8.3-apache
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpng-dev libjpeg62-turbo-dev libwebp-dev libfreetype6-dev \
+    && apt-get install -y --no-install-recommends libpng-dev libjpeg62-turbo-dev libwebp-dev libfreetype6-dev libonig-dev libsqlite3-dev libcurl4-openssl-dev \
     && docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype \
-    && docker-php-ext-install gd \
+    && docker-php-ext-install gd mbstring pdo_mysql pdo_sqlite curl \
     && rm -rf /var/lib/apt/lists/* \
     && a2enmod rewrite headers expires \
     && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
@@ -17,8 +17,10 @@ COPY docker/config.local.php ./config.local.php
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/start.sh /usr/local/bin/booktrack-start
 
-RUN chmod +x /usr/local/bin/booktrack-start \
-    && rm -rf docker .github tests/*.py \
+RUN sed -i 's/\r$//' /usr/local/bin/booktrack-start \
+    && chmod +x /usr/local/bin/booktrack-start \
+    && rm -rf docker .github \
+    && find tests -type f ! -name make_sqlite.php ! -name .htaccess -delete \
     && mkdir -p /var/lib/booktrack \
     && chown -R www-data:www-data storage uploads /var/lib/booktrack
 

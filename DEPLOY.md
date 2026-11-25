@@ -1,71 +1,61 @@
-# Putting BookTrack online
+# Updating hosted BookTrack
 
-This guide puts BookTrack on the internet as a **public portfolio demo**: anyone can open it, press "Sign in as librarian" or "Sign in as member", and try everything. Demo mode keeps the demo accounts safe and puts the demo data back every day.
+The existing public demo is **https://booktrack-demo.onrender.com**, linked from **https://github.com/mukraminansao/Booktrack**. Its source contains `Dockerfile`, `render.yaml` and the `docker/` configuration. The saved InfinityFree settings under local `deploy/` belong to an older deployment path and must not be copied into Render.
 
-Any host with **PHP 8.1+ and MySQL or MariaDB** works. The steps use [InfinityFree](https://www.infinityfree.com) because it's free, needs no card, and gives you PHP 8.3, MySQL, a free subdomain and free HTTPS. On a paid host with cPanel (Hostinger, Namecheap and others) the steps are the same; only the menu names differ.
+## Render public demo
 
-## 1. Create the hosting account
+The container uses PHP/Apache and a private SQLite database under `/var/lib/booktrack`. It rebuilds disposable demo records on startup, retains one-click demo accounts, blocks uploads and sends no email. Do not enter real member information or persistent library records in this portfolio demo.
 
-1. Sign up at InfinityFree and create a hosting account. Pick a free subdomain (or connect your own domain).
-2. In the control panel, open **MySQL Databases** and create a database. Write down the four values it shows: **MySQL host**, **database name**, **username** and **password**.
-3. Turn on the free **SSL certificate** for your site and wait until it's active, so the site works on `https://`.
+The deployment update preserves that mode. Real SMTP credentials and private member passwords are unnecessary for a shared demonstration. A real library needs a separate persistent deployment and the production profile.
 
-## 2. Upload the files
+Before publishing:
 
-Upload the contents of the BookTrack folder into the site's `htdocs` folder, using the host's **Online File Manager** or an FTP program such as FileZilla (the FTP details are in the control panel).
+1. Run the application tests and build the Docker image.
+2. Start an isolated container and run `tests/container_smoke_test.py` against its loopback URL. It checks health, login, the warm dashboard, protected paths, assets and Secure cookies behind the trusted proxy.
+3. Run `php tools/readiness.php` inside the container as `www-data`. The report identifies the public-demo purpose and does not claim production-library readiness.
+4. Publish a review branch to GitHub and wait for Rules, HTTP/database and Demo container checks. The Blueprint declares automatic deployment; verify Render actually completes deployment before calling the update live.
+5. Open the hosted demo, sign in with its member button, check desktop/mobile composition, and verify `/health.php` plus private-path restrictions on that origin.
 
-Leave these out, they're only for your computer:
+Startup creates schema, locks and the encryption key as `www-data`, so background cover fetching and web requests use compatible permissions. Runtime keys, the database and backups stay outside the web root. Optional cover downloads leave generated covers when unavailable.
 
-- `storage/mail/*.eml` (saved test emails)
-- `database/*.sqlite`
-- `.git` and `.github`
-- `uploads/covers/seed-*.jpg`, if you want the demo to match the repository (books then show BookTrack's generated covers)
+The image validates Render's numeric PORT, defaults to 10000 and declares `/health.php` as its health check. The Apache configuration trusts Render's edge-provided `X-Forwarded-Proto` to set Secure session cookies. Do not reuse this trust rule on an exposed origin without a trusted reverse proxy.
 
-## 3. Add the server's settings
+## Read-only acceptance and monitoring
 
-1. Make a copy of `config.local.example.php` named **`config.local.php`**, in the same folder.
-2. Fill it in:
-   - `db`: the four values from step 1
-   - `app_url`: your site's address, e.g. `https://booktrack-demo.example.com`
-   - `debug`: `false`
-   - `demo`: `['enabled' => true]`
-   - `mail`: see step 5, or set `'driver' => 'off'` for now
-3. Upload `config.local.php`. It's listed in `.gitignore`, so the database password never reaches GitHub, and `.htaccess` stops anyone opening it in a browser.
-
-## 4. Create the tables
-
-Open **`https://your-site/setup.php`** and press **Create database**. It fills the database with the demo books, members and loans, then refuses to run again so it can never wipe the library. Any other page opened before this step sends you to `setup.php` automatically.
-
-Then open the site and try both demo buttons.
-
-## 5. Email (password resets and reminders)
-
-Free hosts block PHP's own `mail()`, so BookTrack sends through SMTP. With a Gmail account:
-
-1. Turn on 2-Step Verification for the Google account.
-2. Create an **App password** at <https://myaccount.google.com/apppasswords>.
-3. In `config.local.php` set `'driver' => 'smtp'`, `'from'` and `'username'` to the Gmail address, and `'password'` to the 16-letter app password (the example file has the full block).
-
-Brevo, Zoho Mail and your host's own mailbox work the same way with their SMTP settings. To test, create your own account on the site (the demo accounts never receive reset emails) and use **Forgot password?**.
-
-## 6. Check it
-
-- `https://your-site/config.php`, `/config.local.php`, `/storage/`, `/database/booktrack.sql` and `/.git/` should all be refused (403 or 404).
-- Sign in as the librarian and try to change the demo password on **Profile**: it should say it's a shared demo account.
-- The next day, changes made by visitors should be gone.
-
-To send everyone to `https://` even when they type `http://`, add this near the top of `.htaccess` once HTTPS works (some hosts have a switch for it instead):
-
-```apache
-RewriteEngine On
-RewriteCond %{HTTPS} !=on
-RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+```text
+php tools/check-host.php https://booktrack-demo.onrender.com
+php tools/check-host.php http://localhost/booktrack-v2 --allow-local
 ```
 
-## Good to know
+This verifies TLS using curl, sign-in/health responses, security headers and known private paths. It does not log in, change records, send email or bypass certificate errors. A missing file returning 404 does not independently prove every directory rule.
 
-- **No scheduled tasks on free plans.** That's fine: the daily demo reset and the reminder emails both run on the first visit of each day.
-- **Covers.** "Find online" downloads covers from Open Library. If a host blocks outgoing web requests, books keep their generated covers.
-- **Uploads are off in demo mode**, so strangers can't publish images or files on your site.
-- **Running a real library instead of a demo?** Keep `demo` off, change or delete the demo accounts, turn on two-step sign-in for every librarian, then set `'require_2fa_for_librarians' => true`. See [SECURITY.md](SECURITY.md) for the full checklist.
-- **Updating the site later:** upload the changed files again. New tables are created automatically on the next visit; your `config.local.php` stays as it is.
+`/health.php` returns only `{"status":"ok"}` or `{"status":"unavailable"}` with 200/503. It supports HEAD, rejects writes, creates no session and uses SELECT queries without migrations, resets or reminders. A chosen external monitor can use it; these tools do not create a recurring service or paid plan.
+
+## Persistent production library
+
+Use `config.production.example.php` as the private `config.local.php` template on a persistent PHP/MySQL or secured SQLite host. Set the actual document root in `security.web_root` when it differs from the application folder. Provision HTTPS, restricted database/file access, the original installation key outside the web root, private account credentials, librarian authenticator enrollment, SMTP and off-server backups. The production profile intentionally disables one-click demo access; do not enable it on the shared demonstration.
+
+```text
+php tools/readiness.php
+php tools/check-mail.php
+php tools/check-mail.php --send --to=your-own-mailbox@example.com
+php tools/backup.php create-encrypted
+```
+
+Mail is sent only with the explicit --send flag and recipient. SMTP acceptance does not prove inbox delivery: confirm the reference in the recipient mailbox. Never put passwords in command arguments, source control or public issues.
+
+Supply the backup password privately through BOOKTRACK_BACKUP_PASSWORD. Configure backups.copy_directory for an actual off-server mount and rehearse recovery with the separately stored original installation key. `tests/recovery_drill_test.php` restores fake records into a second local installation and exercises OS rollback denial. That test does not claim a remote provider has been configured.
+
+## Shared Apache hosting package
+
+```text
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-release.ps1 -Mode Production
+```
+
+The ZIP under deploy/releases has a SHA-256 manifest and excludes private configuration, keys, saved mail, uploaded library files, backups, reviews and test data. Local settings are untouched. Its production profile needs valid host configuration before serving visitors. The public installer is excluded: prepare or recover the target database privately before publishing. Use GitHub/Docker source for the existing Render service rather than uploading this ZIP into it.
+
+For an explicitly disposable shared-hosting demo, -Mode Demo preserves demo accounts and disables debug output/mail. Keep it separate from a real library database.
+
+## Rollback
+
+Keep the previous working commit available. A failed build must not advance the deployed branch. A failed runtime check calls for the host's previous deployment/source, preserving private configuration and runtime data. Source rollback differs from restoring library records. The public demo resets intentionally; a persistent library needs a verified data backup before migrations or recovery.

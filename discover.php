@@ -7,6 +7,7 @@ $category = input('category');
 $sort     = input('sort', 'new');
 $onlyAvailable = input('available') === '1';
 $browseAll = input('view') === 'all';
+$filtering = $search !== '' || $category !== '' || $onlyAvailable || $browseAll;
 
 $where = [];
 $params = [];
@@ -27,43 +28,52 @@ $orderSql = $orders[$sort] ?? $orders['new'];
 
 $total = (int)q_val('SELECT COUNT(*) FROM ' . books_from() . " $whereSql", $params);
 $p = paginate($total, 18);
-$books = q_all('SELECT ' . book_columns() . ' FROM ' . books_from() . " $whereSql ORDER BY $orderSql LIMIT {$p['per']} OFFSET {$p['offset']}", $params);
-
-$loans = member_active_loans((int)$user['id']);
-$cats = categories();
-$filtering = $search !== '' || $category !== '' || $onlyAvailable || $browseAll;
+$showFeature = !$filtering && $p['page'] === 1;
+$books = $showFeature ? [] : q_all('SELECT ' . book_columns() . ' FROM ' . books_from() . " $whereSql ORDER BY $orderSql LIMIT {$p['per']} OFFSET {$p['offset']}", $params);
+$cats = $showFeature ? [] : categories();
 
 // The "New on the shelf" feature: the newest book, preferring one with a free copy.
-$showFeature = !$filtering && $p['page'] === 1;
 $featured = $showFeature
     ? q_one('SELECT ' . book_columns() . ' FROM ' . books_from() . ' ORDER BY ((b.copies - COALESCE(al.active, 0)) > 0) DESC, b.created_at DESC, b.id DESC LIMIT 1')
     : null;
-$heldIds = array_map('intval', array_column($loans, 'book_id'));
 $block = borrow_block_reason((int)$user['id']);
 
-// Home screen: swipeable rows (popular posters, new arrivals, what's on the
-// shelf now, then any category big enough to fill a row) instead of one long
-// grid. Choosing a category, searching or "All books" shows the grid.
-$popular = $shelves = [];
+// The editorial home only fetches the rows it renders. Filtered catalogue
+// pages retain the existing category, availability, sort and pagination flow.
+$popular = $arrivals = [];
+$audioBook = null;
 if ($showFeature) {
+    $resumeBook = continue_reading((int)$user['id']);
+    $chosenHero = (int)library_setting('featured_book');
+    if ($resumeBook) $featured=$resumeBook;
+    elseif ($chosenHero && ($chosen=find_book($chosenHero))) $featured=$chosen;
     $popular = q_all('SELECT ' . book_columns() . ' FROM ' . books_from()
         . ' LEFT JOIN (SELECT book_id, COUNT(*) AS n FROM loans GROUP BY book_id) pop ON pop.book_id = b.id'
-        . ' ORDER BY COALESCE(pop.n, 0) DESC, b.created_at DESC LIMIT 10');
-    $shelves[] = ['New arrivals', url('discover.php', ['view' => 'all']),
-        q_all('SELECT ' . book_columns() . ' FROM ' . books_from() . ' ORDER BY b.created_at DESC, b.id DESC LIMIT 12')];
-    $shelves[] = ['Available to borrow now', url('discover.php', ['available' => '1']),
-        q_all('SELECT ' . book_columns() . ' FROM ' . books_from() . ' WHERE (b.copies - COALESCE(al.active, 0)) > 0 ORDER BY b.title LIMIT 12')];
-    $byCount = array_filter($cats, fn($n) => $n >= 4);
-    arsort($byCount);
-    foreach (array_slice(array_keys($byCount), 0, 6) as $c) {
-        $shelves[] = [$c, url('discover.php', ['category' => $c]),
-            q_all('SELECT ' . book_columns() . ' FROM ' . books_from() . ' WHERE b.category = ? ORDER BY b.created_at DESC, b.id DESC LIMIT 12', [$c])];
-    }
+        . ' ORDER BY COALESCE(pop.n, 0) DESC, b.created_at DESC, b.id DESC LIMIT 4');
+    $arrivals = q_all('SELECT ' . book_columns() . ' FROM ' . books_from()
+        . ' ORDER BY b.created_at DESC, b.id DESC LIMIT 12');
+    // A catalogue summary can be listened to without pretending we host a full audiobook.
+    $audioBook = q_one('SELECT ' . book_columns() . ' FROM ' . books_from()
+        . " WHERE b.description IS NOT NULL AND b.description <> ''"
+        . " ORDER BY CASE WHEN b.title = 'Atomic Habits' THEN 0 ELSE 1 END, b.id ASC LIMIT 1");
+    $chosenAudio=(int)library_setting('featured_audio');
+    $recorded=null;foreach(q_all('SELECT '.book_columns().',bm.audio_file FROM '.books_from().' JOIN book_media bm ON bm.book_id=b.id WHERE bm.audio_file IS NOT NULL ORDER BY b.id') as $candidate){if(private_media_path($candidate['audio_file'],'audio')){$recorded=$candidate;break;}}
+    if ($chosenAudio && ($chosen=find_book($chosenAudio))) $audioBook=$chosen;
+    elseif ($recorded) $audioBook=$recorded;
+    $homeCollection=q_one('SELECT * FROM collections WHERE is_active=1 ORDER BY sort_order,id LIMIT 1');
+    $collectionBooks=$homeCollection ? q_all('SELECT '.book_columns().' FROM '.books_from().' JOIN collection_books cb ON cb.book_id=b.id WHERE cb.collection_id=? ORDER BY cb.position,b.title',[(int)$homeCollection['id']]) : [];
 }
 
 $title = 'Discover';
 $active = 'discover';
+$bodyClass = $showFeature ? 'reading-home' : '';
 require __DIR__ . '/includes/partials/header.php';
+
+if ($showFeature) {
+    require __DIR__ . '/includes/partials/reading_home.php';
+    require __DIR__ . '/includes/partials/footer.php';
+    return;
+}
 
 $chipUrl = fn(string $c) => url('discover.php', array_filter(['category' => $c, 'view' => $c === '' ? 'all' : '', 'q' => $search, 'sort' => $sort !== 'new' ? $sort : '', 'available' => $onlyAvailable ? '1' : '']));
 ?>
@@ -87,113 +97,6 @@ $chipUrl = fn(string $c) => url('discover.php', array_filter(['category' => $c, 
 <a class="alert alert--error" href="<?= e(url('loans.php')) ?>" style="text-decoration:none">
   <?= icon('clock') ?><span><strong>Borrowing is paused.</strong> <?= e($block['message']) ?> <span class="link">Go to My loans</span></span>
 </a>
-<?php endif; ?>
-
-<?php if ($featured): $fid = (int)$featured['id']; ?>
-<section class="feature hide-mobile" aria-labelledby="feature-h" data-book="<?= $fid ?>">
-  <?= cover_ambient($featured) ?>
-  <a class="feature__cover" data-tilt href="<?= e(url('book.php', ['id' => $fid])) ?>" tabindex="-1" aria-hidden="true"><?= cover_html($featured) ?></a>
-  <div class="feature__body">
-    <span class="feature__kicker">New on the shelf</span>
-    <h2 id="feature-h"><a href="<?= e(url('book.php', ['id' => $fid])) ?>"><?= e($featured['title']) ?></a></h2>
-    <p><?= e($featured['author']) ?><?= $featured['category'] ? ', ' . e($featured['category']) : '' ?>. <?= e($featured['description'] ?? '') ?></p>
-    <div class="feature__actions">
-      <?php if (in_array($fid, $heldIds, true)): ?>
-        <a class="btn btn--outline" href="<?= e(url('loans.php')) ?>">You have this book</a>
-      <?php elseif ((int)$featured['available'] > 0 && $block): ?>
-        <?php /* the banner above explains why borrowing is paused */ ?>
-      <?php elseif ((int)$featured['available'] > 0): ?>
-        <form method="post" action="<?= e(url('book.php', ['id' => $fid])) ?>">
-          <?= csrf_field() ?><input type="hidden" name="action" value="borrow">
-          <button class="btn" type="submit">Borrow for <?= (int)config('library.loan_days') ?> days</button>
-        </form>
-      <?php endif; ?>
-      <a class="btn btn--outline" href="<?= e(url('book.php', ['id' => $fid])) ?>">View details</a>
-    </div>
-  </div>
-  <div class="feature__side">
-    <h2>Your loans</h2>
-    <?php if ($loans): ?>
-      <?php foreach (array_slice($loans, 0, 3) as $loan):
-        $d = days_until($loan['due_at']);
-        $tone = $loan['status'] === 'return_requested' ? '' : ($d < 0 ? 'is-late' : ($d <= (int)config('library.due_soon_days') ? 'is-soon' : ''));
-        $total = max(1, (strtotime($loan['due_at']) - strtotime($loan['borrowed_at'])) / 86400);
-        $pct = (int)max(4, min(100, round((strtotime(today()) - strtotime($loan['borrowed_at'])) / 86400 / $total * 100)));
-        $when = $loan['status'] === 'return_requested' ? 'Waiting for check-in' : ($d < 0 ? plural(abs($d), 'day') . ' late' : ($d === 0 ? 'Due today' : plural($d, 'day') . ' left'));
-      ?>
-        <div class="due">
-          <div class="due__row"><a href="<?= e(url('book.php', ['id' => $loan['book_id']])) ?>"><?= e($loan['title']) ?></a><span class="due__when <?= $tone ?>"><?= e($when) ?></span></div>
-          <?php if ($loan['status'] !== 'return_requested'): ?><div class="progress <?= $tone ?>" role="img" aria-label="<?= e(due_label($loan['due_at'])) ?>"><span style="width: <?= $pct ?>%"></span></div><?php endif; ?>
-        </div>
-      <?php endforeach; ?>
-      <a class="link small" href="<?= e(url('loans.php')) ?>"><?= count($loans) > 3 ? 'See all ' . count($loans) . ' loans' : 'Manage loans' ?></a>
-    <?php else: ?>
-      <p class="small muted" style="margin:0">Nothing on loan. You can borrow up to <?= (int)config('library.max_active_loans') ?> books at a time, each for <?= (int)config('library.loan_days') ?> days.</p>
-    <?php endif; ?>
-  </div>
-</section>
-<?php endif; ?>
-
-<?php if ($showFeature): ?>
-<div class="m-home">
-  <nav class="chips chips--scroll" aria-label="Categories">
-    <a class="chip" href="<?= e($chipUrl('')) ?>">All books</a>
-    <?php foreach ($cats as $c => $n): ?><a class="chip" href="<?= e($chipUrl($c)) ?>" aria-current="false"><?= e($c) ?></a><?php endforeach; ?>
-  </nav>
-
-  <?php if ($popular): ?>
-  <section class="m-section" aria-labelledby="pop-h">
-    <div class="m-section__head"><h2 id="pop-h">Popular right now</h2></div>
-    <div class="poster-row" data-row>
-      <?php foreach ($popular as $rank => $b): $avail = (int)$b['available']; ?>
-        <a class="poster" href="<?= e(url('book.php', ['id' => $b['id']])) ?>" data-book="<?= (int)$b['id'] ?>">
-          <?= cover_ambient($b) ?>
-          <?= cover_html($b, 'cover poster__cover') ?>
-          <span class="poster__info">
-            <span class="poster__rank" aria-hidden="true"><?= $rank + 1 ?></span>
-            <strong><?= e($b['title']) ?></strong>
-            <span class="poster__author"><?= e($b['author']) ?><?= $b['category'] ? ', ' . e($b['category']) : '' ?></span>
-            <?php if (in_array((int)$b['id'], $heldIds, true)): ?><span class="poster__tag is-mine">On your loans</span><?php else: ?><span class="poster__tag <?= $avail ? '' : 'is-out' ?>"><?= $avail ? ((int)$b['copies'] > 1 ? $avail . ' of ' . (int)$b['copies'] . ' available' : 'Available') : 'On loan' ?></span><?php endif; ?>
-          </span>
-        </a>
-      <?php endforeach; ?>
-    </div>
-  </section>
-  <?php endif; ?>
-
-  <?php if ($loans): ?>
-  <section class="m-section show-mobile" aria-labelledby="mloans-h">
-    <div class="m-section__head"><h2 id="mloans-h">Your loans</h2><a href="<?= e(url('loans.php')) ?>">See all <?= icon('chevron-right') ?></a></div>
-    <div class="due-row">
-      <?php foreach ($loans as $loan):
-        $d = days_until($loan['due_at']);
-        $tone = $loan['status'] === 'return_requested' ? '' : ($d < 0 ? 'is-late' : ($d <= (int)config('library.due_soon_days') ? 'is-soon' : ''));
-        $span = max(1, (strtotime($loan['due_at']) - strtotime($loan['borrowed_at'])) / 86400);
-        $pct = (int)max(4, min(100, round((strtotime(today()) - strtotime($loan['borrowed_at'])) / 86400 / $span * 100)));
-        $when = $loan['status'] === 'return_requested' ? 'Waiting for check-in' : ($d < 0 ? plural(abs($d), 'day') . ' late' : ($d === 0 ? 'Due today' : 'Due in ' . plural($d, 'day')));
-      ?>
-        <a class="due-card" href="<?= e(url('book.php', ['id' => $loan['book_id']])) ?>" data-book="<?= (int)$loan['book_id'] ?>">
-          <?= cover_html(['title' => $loan['title'], 'author' => $loan['author'], 'cover' => $loan['cover']], 'cover-sm') ?>
-          <span class="due-card__body">
-            <strong><?= e($loan['title']) ?></strong>
-            <span class="due__when <?= $tone ?>"><?= e($when) ?></span>
-            <?php if ($loan['status'] !== 'return_requested'): ?><span class="progress <?= $tone ?>" aria-hidden="true"><span style="width: <?= $pct ?>%"></span></span><?php endif; ?>
-          </span>
-        </a>
-      <?php endforeach; ?>
-    </div>
-  </section>
-  <?php endif; ?>
-
-  <?php foreach ($shelves as [$shelfTitle, $shelfUrl, $shelfBooks]): if (count($shelfBooks) < 2) continue; ?>
-  <section class="m-section" aria-label="<?= e($shelfTitle) ?>">
-    <div class="m-section__head"><h2><?= e($shelfTitle) ?></h2><a href="<?= e($shelfUrl) ?>">See all <?= icon('chevron-right') ?></a></div>
-    <div class="shelf-row" data-row>
-      <?php foreach ($shelfBooks as $book) include __DIR__ . '/includes/partials/book_card.php'; ?>
-    </div>
-  </section>
-  <?php endforeach; ?>
-</div>
 <?php endif; ?>
 
 <?php if (!$showFeature): ?>

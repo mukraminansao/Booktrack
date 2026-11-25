@@ -1,0 +1,25 @@
+.reader {min-width:0}
+.reader-toolbar {display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:16px;background:var(--paper-light);border:1px solid var(--border);border-radius:16px}
+.reader-toolbar .btn {min-height:44px}
+.reader-page-label,.reader-zoom-label {display:flex;align-items:center;gap:8px;font-size:14px}
+.reader-page-label input {width:76px}
+.reader-zoom-label select {width:126px}
+.reader-status {font-size:14px;color:var(--quiet);min-height:24px;margin:12px 0}
+.reader-status.is-error {color:var(--red)}
+.reader-layout {display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;align-items:start}
+.reader-navigation {border:1px solid var(--border);border-radius:14px;padding:14px;background:var(--paper-light);min-width:0}
+.reader-navigation details+details {margin-top:18px}
+.reader-navigation summary {cursor:pointer;font-weight:600;min-height:40px;display:list-item}
+.reader-chapters,.reader-bookmarks {list-style:none;margin:0;padding:0;font-size:14px}
+.reader-chapters button,.reader-bookmarks button {text-align:left;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;min-height:44px;padding:8px 3px;border-radius:7px;overflow-wrap:anywhere}
+.reader-chapters button {display:flex;flex-direction:column;width:100%;gap:3px}
+.reader-chapters span {color:var(--quiet);font-size:12px}
+.reader-bookmarks li {display:flex;align-items:center;justify-content:space-between;gap:6px}
+.reader-bookmarks button:last-child {min-width:44px;text-align:center}
+.reader-chapters button:hover,.reader-bookmarks button:hover {background:var(--surface-2)}
+.reader-stage {overflow:auto;min-width:0;max-height:85dvh;background:var(--surface-2);padding:16px;border:1px solid var(--border);border-radius:14px;overscroll-behavior:contain}
+.reader-paper {position:relative;margin:auto;background:#fff;box-shadow:0 3px 12px #211f171c;color:#000}
+.reader-paper canvas {display:block}
+.reader-paper .textLayer {inset:0;overflow:clip;opacity:1}
+.reader-page .main {gap:20px}
+@media(max-width:767px){.reader-layout{display:flex;flex-direction:column}.reader-stage{width:100%;order:0;max-height:72dvh;padding:8px}.reader-navigation{width:100%;order:1}.reader-toolbar{gap:8px;padding:12px}.reader-zoom-label{margin-left:0}.reader-page .page-head h1{font-size:32px}.reader-toolbar .btn{font-size:14px}.reader-page-label{font-size:13px}.reader-page-label input{width:64px}}

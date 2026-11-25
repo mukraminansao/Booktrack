@@ -31,7 +31,7 @@ require __DIR__ . '/includes/partials/header.php';
 ?>
 <div class="landing">
   <header class="landing__bar">
-    <a class="auth__brand" href="<?= e(url('index.php')) ?>"><?= logo_mark() ?><span>BookTrack</span></a>
+    <a class="auth__brand" href="<?= e(url('index.php')) ?>"><?= icon('book') ?><span>BookTrack</span></a>
     <nav class="landing__nav" aria-label="Site">
       <?php if ($repo): ?><a class="btn btn--ghost btn--sm" href="<?= e($repo) ?>" rel="noopener">Source code</a><?php endif; ?>
       <a class="btn btn--sm" href="<?= e(url('login.php')) ?>">Sign in</a>
@@ -49,7 +49,7 @@ require __DIR__ . '/includes/partials/header.php';
           <?php if ($repo): ?><a class="btn btn--outline btn--lg" href="<?= e($repo) ?>" rel="noopener">View the code</a><?php endif; ?>
         </div>
         <?php if (demo_mode()): ?>
-          <p class="landing__note"><?= icon('shield') ?><span>No sign-up needed: the demo has one-click librarian and member accounts. It's shared with other visitors and resets every day, so <strong>please don't enter real personal details or a password you use anywhere else.</strong></span></p>
+          <p class="landing__note"><?= icon('shield') ?><span>No sign-up needed: the demo has one-click librarian and member accounts. It's shared with other visitors and resets automatically, so <strong>please don't enter real personal details or a password you use anywhere else.</strong></span></p>
         <?php endif; ?>
       </div>
       <div class="landing__shelf" aria-hidden="true">

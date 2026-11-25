@@ -10,8 +10,7 @@
  * - 5 wrong codes in 5 minutes end the attempt; the password must be entered again.
  * - 10 recovery codes are shown once when it's turned on. Only their SHA-256 hashes are
  *   stored, and each works once.
- * - The shared secret itself has to be readable to check codes, so it's stored as is;
- *   see SECURITY.md.
+ * - Secrets are encrypted with the installation key, kept separately from database backups.
  */
 
 const TOTP_STEP = 30;
@@ -35,7 +34,7 @@ function two_factor_ensure_schema(): void
         if (db_is_mysql()) {
             db()->exec("CREATE TABLE two_factor (
                 user_id        INT UNSIGNED PRIMARY KEY,
-                secret         VARCHAR(64) NOT NULL,
+                secret         TEXT NOT NULL,
                 last_step      BIGINT NOT NULL DEFAULT 0,
                 recovery_codes TEXT NOT NULL,
                 enabled_at     DATETIME NOT NULL,
@@ -143,7 +142,25 @@ function recovery_codes_hash(array $codes): string
 function two_factor_for(int $userId): ?array
 {
     two_factor_ensure_schema();
-    return q_one('SELECT * FROM two_factor WHERE user_id = ?', [$userId]);
+    $row=q_one('SELECT * FROM two_factor WHERE user_id = ?', [$userId]);
+    if($row&&function_exists('secret_open')){
+        if(!str_starts_with($row['secret'],'enc1:'))q('UPDATE two_factor SET secret=? WHERE user_id=? AND secret=?',[secret_seal($row['secret'],'totp:'.$userId),$userId,$row['secret']]);
+        $row['secret']=secret_open($row['secret'],'totp:'.$userId);
+    }
+    return $row;
+}
+
+function two_factor_secret_schema():void
+{
+    if(db_is_mysql()){$column=q_one("SHOW COLUMNS FROM two_factor LIKE 'secret'");if($column&&!str_contains(strtolower($column['Type']),'text'))db()->exec('ALTER TABLE two_factor MODIFY secret TEXT NOT NULL');}
+}
+function two_factor_encrypt_legacy():void
+{
+    if(library_setting('totp_encryption_schema')==='1')return;
+    transaction(function(){
+        foreach(q_all("SELECT user_id,secret FROM two_factor WHERE secret NOT LIKE 'enc1:%'") as $row)q('UPDATE two_factor SET secret=? WHERE user_id=? AND secret=?',[secret_seal($row['secret'],'totp:'.$row['user_id']),$row['user_id'],$row['secret']]);
+        reading_upsert('app_settings',['setting_key'=>'totp_encryption_schema'],['setting_value'=>'1']);
+    });
 }
 
 function two_factor_enabled(int $userId): bool
@@ -169,7 +186,7 @@ function two_factor_enable(int $userId, string $secret, string $code): array
     if ($step === null) throw new DomainException('That code didn\'t match. Check the time on your phone is set automatically, then try the newest code.');
     $codes = recovery_codes_new();
     q('INSERT INTO two_factor (user_id, secret, last_step, recovery_codes, enabled_at) VALUES (?, ?, ?, ?, ?)',
-        [$userId, $secret, $step, recovery_codes_hash($codes), date('Y-m-d H:i:s')]);
+        [$userId, function_exists('secret_seal')?secret_seal($secret,'totp:'.$userId):$secret, $step, recovery_codes_hash($codes), date('Y-m-d H:i:s')]);
     log_activity('user.2fa_enabled', two_factor_who($userId));
     return $codes;
 }
@@ -205,6 +222,7 @@ function two_factor_verify(int $userId, string $input): ?string
     return transaction(function () use ($userId, $input) {
         $tf = q_one('SELECT * FROM two_factor WHERE user_id = ?' . for_update(), [$userId]);
         if (!$tf) return null;
+        if(function_exists('secret_open'))$tf['secret']=secret_open($tf['secret'],'totp:'.$userId);
         $step = totp_match((string)$tf['secret'], $input, (int)$tf['last_step']);
         if ($step !== null) {
             q('UPDATE two_factor SET last_step = ? WHERE user_id = ? AND last_step < ?', [$step, $userId, $step]);
@@ -232,7 +250,7 @@ function two_factor_begin(int $userId): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) session_regenerate_id(true);
     unset($_SESSION['user_id']);
-    $_SESSION['2fa_pending'] = ['uid' => $userId, 'at' => time(), 'tries' => 0];
+    $_SESSION['2fa_pending'] = ['uid' => $userId, 'at' => time(), 'tries' => 0,'generation'=>library_setting('user_session_'.$userId,'')];
 }
 
 /** The user id waiting for a code, or null (also clears an expired attempt). */
@@ -240,7 +258,7 @@ function two_factor_pending(): ?int
 {
     $p = $_SESSION['2fa_pending'] ?? null;
     if (!$p) return null;
-    if (time() - (int)$p['at'] > TWO_FACTOR_PENDING_TTL) {
+    if (time() - (int)$p['at'] > TWO_FACTOR_PENDING_TTL || !hash_equals(library_setting('user_session_'.(int)$p['uid'],''),(string)($p['generation']??''))) {
         unset($_SESSION['2fa_pending']);
         return null;
     }

@@ -21,8 +21,8 @@ $spotlight = array_slice($spotlight, 0, 5);
 <div class="auth">
   <div class="auth__panel">
     <a class="auth__brand" href="<?= e(url('index.php')) ?>" title="BookTrack home">
-      <?= logo_mark() ?>
+      <?= icon('book') ?>
       <span>BookTrack</span>
     </a>
     <button class="btn btn--ghost btn--icon auth__theme" type="button" data-theme-toggle aria-label="Switch to <?= $theme === 'light' ? 'dark' : 'light' ?> theme" title="Switch theme"><?= icon($theme === 'light' ? 'moon' : 'sun') ?></button>
-    <main class="auth__main" id="auth-main">
+    <main class="auth__main" id="auth-main" tabindex="-1">

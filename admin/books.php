@@ -29,13 +29,14 @@ if (is_post()) {
         if ($data['published_year'] !== '' && (!preg_match('/^-?\d{1,4}$/', $data['published_year']) || (int)$data['published_year'] > (int)date('Y') + 1)) $formErrors[] = 'Enter a valid year.';
 
         $existing = $id ? q_one('SELECT * FROM books WHERE id = ?', [$id]) : null;
+        if($existing&&(input('version')===''||!hash_equals(edit_version('books',$id),input('version'))))$formErrors[]='This book changed in another editor. Reload before saving.';
         if ($id && !$existing) $formErrors[] = 'That book no longer exists.';
         if (!$formErrors && q_val('SELECT COUNT(*) FROM books WHERE title = ? AND author = ? AND id <> ?', [$data['title'], $data['author'], $id])) {
             $formErrors[] = 'A book with this title and author already exists.';
         }
         if (!$formErrors && $existing) {
-            $onLoan = (int)q_val('SELECT COUNT(*) FROM loans WHERE book_id = ? AND status IN ' . ACTIVE_LOAN, [$id]);
-            if ((int)$data['copies'] < $onLoan) $formErrors[] = "$onLoan copies are on loan right now, so copies can't be lower than that.";
+            $onLoan = (int)q_val('SELECT COUNT(*) FROM loans WHERE book_id = ? AND status IN ' . ACTIVE_LOAN, [$id])+(int)q_val("SELECT COUNT(*) FROM holds WHERE book_id=? AND status='ready'",[$id]);
+            if ((int)$data['copies'] < $onLoan) $formErrors[] = "$onLoan copies are on loan or reserved right now, so copies can't be lower than that.";
         }
 
         $cover = $pdf = null;
@@ -68,22 +69,24 @@ if (is_post()) {
                 $data['title'], $data['author'], $data['category'] ?: null, $data['isbn'] ?: null,
                 $data['published_year'] !== '' ? (int)$data['published_year'] : null, (int)$data['copies'], $data['description'] ?: null,
             ];
+            $committed=false;
+            try{
             if ($existing) {
                 $newCover = $cover ?? (input('remove_cover') === '1' ? null : $existing['cover']);
                 $newPdf = $pdf ?? (input('remove_pdf') === '1' ? null : $existing['pdf']);
-                q('UPDATE books SET title = ?, author = ?, category = ?, isbn = ?, published_year = ?, copies = ?, description = ?, cover = ?, pdf = ? WHERE id = ?',
-                    [...$vals, $newCover, $newPdf, $id]);
+                update_catalogue_book($id,$vals,$newCover,$newPdf);
+                $committed=true;
                 if ($newCover !== $existing['cover']) delete_upload($existing['cover']);
                 if ($newPdf !== $existing['pdf']) delete_upload($existing['pdf']);
-                log_activity('book.updated', "“{$data['title']}”");
                 flash('success', '“' . $data['title'] . '” was updated.' . $coverNote);
             } else {
-                q('INSERT INTO books (title, author, category, isbn, published_year, copies, description, cover, pdf, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [...$vals, $cover, $pdf, date('Y-m-d H:i:s')]);
-                log_activity('book.created', "“{$data['title']}”");
+                transaction(function()use($vals,$cover,$pdf,$data){q('INSERT INTO books (title, author, category, isbn, published_year, copies, description, cover, pdf, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [...$vals, $cover, $pdf, date('Y-m-d H:i:s')]);log_activity('book.created', "“{$data['title']}”");});
+                $committed=true;
                 flash('success', '“' . $data['title'] . '” was added to the catalogue.' . $coverNote);
             }
             back('admin/books.php');
+            }catch(Throwable $error){if(!$committed){delete_upload($cover);delete_upload($pdf);}error_log('BookTrack book save: '.$error->getMessage());$formErrors[]='The book could not be saved. Please try again.';}
         }
         $formData = $data + ['id' => $id ?: ''];
     }
@@ -114,10 +117,12 @@ if (is_post()) {
             if ($onLoan) {
                 flash('error', "“{$book['title']}” can't be deleted while it's on loan.");
             } else {
-                q('DELETE FROM books WHERE id = ?', [$book['id']]);
+                $recording = media_for((int)$book['id']);
+                delete_catalogue_book((int)$book['id']);
                 delete_upload($book['cover']);
                 delete_upload($book['pdf']);
-                log_activity('book.deleted', "“{$book['title']}”");
+                delete_upload($recording['audio_file'] ?? null);
+
                 flash('success', '“' . $book['title'] . '” was deleted.');
             }
         }
@@ -159,7 +164,7 @@ $attachments = function (?array $b): array {
     ];
 };
 $bookJson = fn(array $b) => json_encode([
-    'id' => $b['id'], 'title' => $b['title'], 'author' => $b['author'], 'category' => $b['category'], 'isbn' => $b['isbn'],
+    'version'=>edit_version('books',(int)$b['id']), 'id' => $b['id'], 'title' => $b['title'], 'author' => $b['author'], 'category' => $b['category'], 'isbn' => $b['isbn'],
     'published_year' => $b['published_year'], 'copies' => $b['copies'], 'description' => $b['description'],
 ] + $attachments($b), JSON_UNESCAPED_UNICODE);
 
@@ -213,6 +218,7 @@ require __DIR__ . '/../includes/partials/header.php';
           <td class="num hide-sm"><?= (int)$b['times'] ?></td>
           <td>
             <div class="actions">
+              <a class="btn btn--ghost btn--sm btn--icon" href="<?= e(url('admin/media.php',['id'=>$b['id']])) ?>" aria-label="Audio and chapters for <?= e($b['title']) ?>" title="Audio and chapters"><?= icon('file') ?></a>
               <button class="btn btn--ghost btn--sm btn--icon" type="button" data-open="book-dialog" data-fill="<?= e($bookJson($b)) ?>" aria-label="Edit <?= e($b['title']) ?>" title="Edit"><?= icon('edit') ?></button>
               <form method="post" data-confirm="“<?= e($b['title']) ?>” and its loan history will be permanently removed." data-confirm-title="Delete this book?" data-confirm-ok="Delete book">
                 <?= csrf_field() ?><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
@@ -239,7 +245,7 @@ $open = $formErrors || $autoEdit || input('new') === '1';
 ?>
 <dialog class="modal" id="book-dialog" <?= $open ? 'data-autoopen' : '' ?> aria-labelledby="book-h" style="width:min(720px, calc(100vw - 32px))">
   <form method="post" enctype="multipart/form-data">
-    <?= csrf_field() ?><input type="hidden" name="action" value="save"><input type="hidden" name="id" value="<?= e($f['id'] ?? '') ?>">
+    <?= csrf_field() ?><input type="hidden" name="action" value="save"><input type="hidden" name="version" value="<?= e(input('version',!empty($f['id'])?edit_version('books',(int)$f['id']):'')) ?>"><input type="hidden" name="id" value="<?= e($f['id'] ?? '') ?>">
     <div class="modal__head"><h2 id="book-h" data-title-edit="Edit book" data-title-create="Add a book"><?= $isEdit ? 'Edit book' : 'Add a book' ?></h2>
       <button class="btn btn--ghost btn--icon btn--sm" type="button" data-close aria-label="Close"><?= icon('x') ?></button></div>
     <div class="modal__body">
@@ -294,7 +300,7 @@ $open = $formErrors || $autoEdit || input('new') === '1';
               </div>
             </div>
           </div>
-          <span class="hint">Only signed-in users can open it. Up to <?= (int)config('uploads.max_pdf_mb') ?> MB.</span>
+          <span class="hint">Replacing or removing the PDF resets saved reading places, bookmarks and PDF chapters. Only signed-in users can open it. Up to <?= (int)config('uploads.max_pdf_mb') ?> MB.</span>
         </div>
       </div>
     </div>

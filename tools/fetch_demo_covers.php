@@ -12,15 +12,18 @@ if (PHP_SAPI !== 'cli') {
     exit;
 }
 require __DIR__ . '/../includes/bootstrap.php';
+if(!demo_mode()){fwrite(STDERR,"Cover seeding is limited to the disposable public demo.\n");exit(1);}
 
 /** Demo books whose title search on Open Library comes back without a cover. */
 const FALLBACK_ISBN = ['Nineteen Eighty-Four' => '9780451524935'];
 
 $found = 0;
 $missing = [];
-foreach (q_all("SELECT id, title, author, isbn, cover FROM books WHERE cover LIKE 'uploads/covers/seed-%'") as $book) {
-    $target = APP_ROOT . '/' . $book['cover'];
-    if (is_file($target)) continue;
+foreach (q_all("SELECT id, title, author, isbn, cover FROM books WHERE cover IS NULL OR cover='' OR cover LIKE 'uploads/covers/seed-%'") as $book) {
+    $relative=$book['cover'];
+    if(!$relative||!preg_match('~^uploads/covers/seed-[A-Za-z0-9_-]+\.(?:jpg|png)$~D',$relative))$relative='uploads/covers/seed-'.(int)$book['id'].'.jpg';
+    $target = APP_ROOT . '/' . $relative;
+    if (is_file($target)){if($relative!==$book['cover'])q('UPDATE books SET cover=? WHERE id=?',[$relative,$book['id']]);continue;}
     $url = find_cover_url($book);
     // A title search can miss a famous edition; fall back to a known ISBN for those
     if (!$url && isset(FALLBACK_ISBN[$book['title']])) $url = find_cover_url(['isbn' => FALLBACK_ISBN[$book['title']]]);
@@ -41,6 +44,6 @@ foreach (q_all("SELECT id, title, author, isbn, cover FROM books WHERE cover LIK
     $ok = $img
         ? (str_ends_with($target, '.png') ? imagepng($img, $target) : imagejpeg($img, $target, 84))
         : file_put_contents($target, $bytes) !== false;
-    if ($ok) $found++; else $missing[] = $book['title'];
+    if ($ok){q('UPDATE books SET cover=? WHERE id=?',[$relative,$book['id']]);$found++;} else $missing[] = $book['title'];
 }
 echo "Demo covers: $found downloaded" . ($missing ? '; no cover for ' . implode(', ', $missing) : '') . ".\n";

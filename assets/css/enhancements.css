@@ -1,0 +1,79 @@
+/* Additions keep the approved dashboard grid, panel colours and heading scale. */
+.audio-author-row {display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.audio-author-row p {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.audio-speed select {border:0;background:transparent;color:var(--text-2);font:inherit;font-size:12px;min-height:32px;max-width:70px;cursor:pointer}
+.audiobook>audio {display:none}
+.audiobook [data-audio-back] .icon,.audiobook [data-audio-forward] .icon {fill:none;stroke:currentColor;stroke-width:1.5}
+.audio-navigation :is(.reader-chapters,.reader-bookmarks) {list-style:none;padding:0;margin:0;font-size:14px}
+.audio-navigation :is(.reader-chapters,.reader-bookmarks) button {border:0;background:transparent;color:inherit;font:inherit;text-align:left;border-radius:8px;padding:8px;min-height:44px}
+.audio-navigation .reader-chapters button {display:flex;justify-content:space-between;align-items:center;width:100%;gap:12px}
+.audio-navigation .reader-chapters span {color:var(--muted);font-size:13px;white-space:nowrap}
+.audio-navigation .reader-bookmarks li {display:flex;justify-content:space-between;gap:8px}
+.audio-navigation .reader-bookmarks button:last-child {min-width:44px;text-align:center}
+.audio-navigation button:hover {background:var(--surface-2)}
+.audio-status {font-size:13px;color:var(--quiet);margin:8px 0}
+.audio-status[data-ready] {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);margin:-1px}
+.audio-status.is-error {color:var(--red)}
+.audio-actions {display:flex;flex-wrap:wrap;gap:12px;margin:20px 0}
+.audio-navigation {display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px}
+.audio-navigation>section {min-width:0;border:1px solid var(--border);border-radius:16px;padding:20px;background:var(--surface)}
+.audio-navigation h2 {font-size:26px;margin:0 0 14px}
+.audio-navigation button {min-height:44px;cursor:pointer}
+.audio-navigation .is-current {color:var(--gold-text);font-weight:600}
+.reading-account-progress {border-left:2px solid var(--gold);padding:8px 14px;color:var(--text-2);font-size:14px;margin:0}
+.enhancement-form {display:flex;flex-direction:column;gap:20px;min-width:0}
+.enhancement-form .field {min-width:0}
+.enhancement-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.enhancement-grid .card {min-width:0}
+.chapter-edit-row {display:grid;grid-template-columns:minmax(0,1fr) 110px auto;gap:10px;align-items:end;padding:12px 0;border-bottom:1px solid var(--border)}
+.collection-picker {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:320px;overflow:auto;padding:6px}
+.collection-picker label {display:flex;gap:9px;align-items:start;font-size:14px;min-height:44px;cursor:pointer}
+.collection-picker input {flex-shrink:0;margin-top:4px}
+.collection-choice {display:flex;align-items:start;gap:8px;min-width:0}
+.collection-choice>label:first-child {flex:1;min-width:0}
+.collection-picker .collection-book-order {display:block;flex:0 0 60px;min-height:44px}
+.collection-book-order input {width:60px;min-height:44px;padding:8px;margin:0;font-size:14px}
+.collection-picker [hidden] {display:none}
+.content-book-list,.backup-list {list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.content-book-list {grid-template-columns:repeat(2,minmax(0,1fr))}
+.content-book-list a {display:flex;flex-direction:column;gap:4px;min-height:54px;padding:10px;border:1px solid var(--border);border-radius:10px}
+.content-book-list span {font-size:13px;color:var(--muted)}
+.backup-list li {display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--border)}
+.backup-list li>span {min-width:0;display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere}
+.backup-counts {display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:0}
+.backup-counts div {background:var(--surface-2);padding:10px;border-radius:10px}
+.backup-counts dt {font-size:13px;text-transform:capitalize;color:var(--muted)}
+.backup-counts dd {font-size:20px;margin:3px 0 0}
+.admin-surface h1,.admin-surface h2 {font-family:'Times New Roman',Times,serif;font-weight:400;letter-spacing:-.035em}
+[data-theme=light] .admin-surface {--bg:#f8f5ed;--surface:#fffdf9;--surface-2:#ede5d5;--glass:#f8f5ede6;--glass-strong:#fffdf9;--text:#201f1a;--text-2:#555149;--muted:#68655e;--faint:#756d60;--border:#e3dbcd;--border-strong:#c9bfac;--rail:#f1efe3;--rail-border:#e3dbcd;--gold:#a48b3c;--gold-text:#826a29;--font-display:'Times New Roman',Times,serif;background:var(--bg)}
+.admin-surface .table td,.admin-surface .table th {font-size:14px}
+.admin-surface .page-head h1 {font-size:38px}
+.reading-home.member-page .book-card__title,.reading-home.member-page .book-card__author,.reading-home.member-page .status,.reading-home.member-page .small {font-size:14px}
+.reading-home.member-page .card,.reading-home.member-page .loan-card {border-color:var(--border)}
+:is(.reader-page,.listening-page) button:focus-visible {outline:2px solid var(--focus);outline-offset:3px}
+.admin-surface .audiobook {--ink:var(--text);--quiet:var(--muted);--paper-light:var(--surface)}
+.admin-surface .audiobook .reading-player {background:var(--surface);border-color:var(--border)}
+@media(max-width:767px){
+ :is(.reader-page,.listening-page,.collection-page,.admin-surface) .back-link {width:auto;height:auto;min-height:44px;justify-content:flex-start;white-space:nowrap;background:transparent;border:0;backdrop-filter:none}
+ .admin-surface .audiobook .reading-player {padding:12px;gap:12px}
+ .admin-surface .audiobook .reading-utility-cover {width:56px;height:82px}
+ .admin-surface .audiobook .reading-player-title {font-size:17px}
+ .admin-surface .audiobook .reading-player-author {font-size:13px}
+}
+@media(max-width:359px){.admin-surface .topbar__brand small{display:none}.admin-surface .tabbar{padding-inline:2px}.admin-surface .tabbar a{font-size:10px}.admin-surface .tabbar__icon{width:44px}}
+@media(max-width:900px){.enhancement-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:767px){
+ .audio-navigation{grid-template-columns:minmax(0,1fr)}
+ .chapter-edit-row{grid-template-columns:minmax(0,1fr) 80px}.chapter-edit-row .btn{grid-column:1/-1;justify-self:end}
+ .collection-picker{grid-template-columns:minmax(0,1fr)}
+ .content-book-list{grid-template-columns:minmax(0,1fr)}
+ .reading-home .reading-player-controls button{width:44px;height:44px;min-width:44px}
+ .reading-home .reading-player-bottom{min-height:48px}
+ .reading-home:not(.member-page) .reading-greeting p,.reading-home:not(.member-page) .reading-feature .reading-excerpt{font-size:14px}
+ .reading-home:not(.member-page) .reading-book>span:last-child{font-size:12px}
+ .reading-home:not(.member-page) .reading-update-description{font-size:13px}
+ .audio-speed select{min-height:44px;font-size:13px}
+ .audiobook .reading-player-progress input::-webkit-slider-thumb{width:26px;height:26px;border:7px solid transparent;background-clip:padding-box;box-shadow:inset 0 0 0 1px var(--quiet)}
+ .audiobook .reading-player-progress input::-moz-range-thumb{width:12px;height:12px;border:7px solid transparent;background-clip:padding-box;box-shadow:inset 0 0 0 1px var(--quiet)}
+ .admin-surface .main{padding-bottom:96px}
+}
