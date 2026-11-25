@@ -178,6 +178,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Add private build-context sentinels
+        run: |
+          mkdir -p uploads/pdfs uploads/audio storage/keys
+          printf 'PRIVATE TEST FIXTURE' > uploads/pdfs/private-ci-sentinel.pdf
+          printf 'PRIVATE TEST FIXTURE' > uploads/audio/private-ci-sentinel.wav
+          printf 'PRIVATE TEST FIXTURE' > storage/keys/private-ci-sentinel.key
       - name: Build the image
         run: |
           set -o pipefail
@@ -185,6 +191,14 @@ jobs:
             echo "::error title=Docker build failed::$(tail -n 60 build.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
             exit 1
           fi
+      - name: Verify private data is absent from the image
+        run: |
+          docker run --rm --entrypoint sh booktrack-demo -c '
+            test ! -f uploads/pdfs/private-ci-sentinel.pdf &&
+            test ! -f uploads/audio/private-ci-sentinel.wav &&
+            test ! -f storage/keys/private-ci-sentinel.key &&
+            test -z "$(find uploads -type f ! -name .htaccess ! -name .gitkeep)" &&
+            test -z "$(find storage -type f ! -name .htaccess ! -name .gitkeep)"'
       - name: Start it
         run: |
           docker run -d --name bt -p 8080:10000 booktrack-demo

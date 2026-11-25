@@ -16,6 +16,10 @@ COPY . ./
 COPY docker/config.local.php ./config.local.php
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/start.sh /usr/local/bin/booktrack-start
+COPY docker/uploads.htaccess ./uploads/.htaccess
+COPY docker/private.htaccess ./uploads/pdfs/.htaccess
+COPY docker/private.htaccess ./uploads/audio/.htaccess
+COPY docker/private.htaccess ./storage/.htaccess
 
 RUN sed -i 's/\r$//' /usr/local/bin/booktrack-start \
     && chmod +x /usr/local/bin/booktrack-start \
