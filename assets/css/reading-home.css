@@ -86,9 +86,9 @@
 .reading-menu a,.reading-menu button {display:flex;align-items:center;gap:12px;padding:12px;min-height:44px;width:100%;border:0;background:transparent;color:inherit;text-align:left;font:inherit;border-radius:10px;cursor:pointer}
 .reading-menu a:hover,.reading-menu button:hover {background:var(--surface-2)}
 .reading-home :focus-visible {outline:2px solid var(--focus);outline-offset:4px}
-.reading-home .reading-cover.cover--generated {display:flex;padding:14px}
-.reading-home .reading-cover .cover__title {font-size:20px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
-.reading-home .reading-cover .cover__author {font-size:12px}
+.reading-home .reading-cover.cover--generated {display:grid;grid-template-rows:minmax(0,1fr) auto;gap:8px;padding:12%;align-items:center;justify-content:stretch}
+.reading-home .reading-cover .cover__title {font-size:clamp(12px,1.2vw,18px);min-height:0;max-height:100%;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.reading-home .reading-cover .cover__author {position:static;order:1;margin:0;max-width:100%;font-size:9px;line-height:1.25;letter-spacing:.08em;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .reading-home :is(.reading-mini-cover,.reading-utility-cover).cover--generated {display:flex;padding:8px;overflow:hidden}
 .reading-home :is(.reading-mini-cover,.reading-utility-cover) .cover__title {font-size:12px;overflow-wrap:anywhere}
 .reading-home :is(.reading-mini-cover,.reading-utility-cover) .cover__author {display:none}

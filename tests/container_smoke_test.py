@@ -16,6 +16,8 @@ head=get('/health.php','HEAD');check('health HEAD returns metadata without a bod
 for path in ['/config.local.php','/database/booktrack.sql','/storage/','/includes/bootstrap.php','/tools/readiness.php','/tests/make_sqlite.php']:
  response=get(path);check('private path blocked: '+path,response.status in (403,404))
 page=get('/login.php',headers={'X-Forwarded-Proto':'https'});check('trusted proxy HTTPS sets Secure session cookies','secure' in page.headers.get('Set-Cookie','').lower())
+check('trusted proxy HTTPS enables HSTS',page.headers.get('Strict-Transport-Security')=='max-age=31536000')
+check('plain loopback HTTP does not advertise HSTS',get('/login.php').headers.get('Strict-Transport-Security') is None)
 jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar));page=client.open(BASE+'/login.php',timeout=30).read().decode();token=re.search(r'name="_token" value="([^"]+)"',page).group(1)
 check('public demo buttons remain available','Sign in as member' in page and 'Sign in as librarian' in page)
 body=client.open(BASE+'/login.php',urllib.parse.urlencode({'_token':token,'username':'alice','password':'member123'}).encode(),timeout=30).read().decode()
