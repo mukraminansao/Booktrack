@@ -40,7 +40,7 @@ $block = borrow_block_reason((int)$user['id']);
 
 // The editorial home only fetches the rows it renders. Filtered catalogue
 // pages retain the existing category, availability, sort and pagination flow.
-$popular = $arrivals = [];
+$popular = $arrivals = $audioChoices = [];
 $audioBook = null;
 if ($showFeature) {
     $resumeBook = continue_reading((int)$user['id']);
@@ -53,13 +53,22 @@ if ($showFeature) {
     $arrivals = q_all('SELECT ' . book_columns() . ' FROM ' . books_from()
         . ' ORDER BY b.created_at DESC, b.id DESC LIMIT 12');
     // A catalogue summary can be listened to without pretending we host a full audiobook.
-    $audioBook = q_one('SELECT ' . book_columns() . ' FROM ' . books_from()
-        . " WHERE b.description IS NOT NULL AND b.description <> ''"
-        . " ORDER BY CASE WHEN b.title = 'Atomic Habits' THEN 0 ELSE 1 END, b.id ASC LIMIT 1");
+    $audioBook = $popular[0] ?? $featured;
+    $audioChoices = q_all('SELECT b.id,b.title,bm.audio_file FROM books b LEFT JOIN book_media bm ON bm.book_id=b.id ORDER BY b.title,b.id');
     $chosenAudio=(int)library_setting('featured_audio');
-    $recorded=null;foreach(q_all('SELECT '.book_columns().',bm.audio_file FROM '.books_from().' JOIN book_media bm ON bm.book_id=b.id WHERE bm.audio_file IS NOT NULL ORDER BY b.id') as $candidate){if(private_media_path($candidate['audio_file'],'audio')){$recorded=$candidate;break;}}
+    $recorded=null;
+    foreach($audioChoices as &$candidate){
+        $candidate['has_audio']=(bool)private_media_path($candidate['audio_file'],'audio');
+        if(!$recorded&&$candidate['has_audio'])$recorded=$candidate;
+    }
+    unset($candidate);
     if ($chosenAudio && ($chosen=find_book($chosenAudio))) $audioBook=$chosen;
-    elseif ($recorded) $audioBook=$recorded;
+    elseif ($recorded) $audioBook=find_book((int)$recorded['id']);
+    if (input('listen') !== '') {
+        $selected=find_book(input_int('listen'));
+        if (!$selected) {flash('error','That book is no longer available. Choose another title to listen to.');redirect('discover.php');}
+        $audioBook=$selected;
+    }
     $homeCollection=q_one('SELECT * FROM collections WHERE is_active=1 ORDER BY sort_order,id LIMIT 1');
     $collectionBooks=$homeCollection ? q_all('SELECT '.book_columns().' FROM '.books_from().' JOIN collection_books cb ON cb.book_id=b.id WHERE cb.collection_id=? ORDER BY cb.position,b.title',[(int)$homeCollection['id']]) : [];
 }

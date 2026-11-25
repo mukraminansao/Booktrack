@@ -152,6 +152,22 @@ try:
     check('Audio and chapters saved' not in r.text and sql('SELECT title FROM book_chapters WHERE book_id=7 ORDER BY id') == before, 'invalid chapter edit leaves previous chapters intact')
     post(admin, '/admin/content.php', {'action': 'features', 'featured_book': 7, 'featured_audio': 7})
     check(sql("SELECT setting_value FROM app_settings WHERE setting_key='featured_book'")[0]['setting_value'] == '7', 'featured book selection saved')
+    home = alice.get(BASE + '/discover.php').text
+    check('id="listening-book"' in home and 'data-audiobook' in home, 'featured audiobook keeps its recording and offers a book chooser')
+    for book_id, title in [(14, 'The Alchemist'), (9, 'The Psychology of Money')]:
+        selected = alice.get(BASE + f'/discover.php?listen={book_id}').text
+        check(f'<option value="{book_id}" selected' in selected, f'chooser retains selected book {book_id}')
+        check('data-reading-player' in selected and 'data-audiobook' not in selected and 'A little about ' + title in selected, f'selecting book {book_id} replaces the featured recording with its own preview')
+        check('listen=' + str(book_id) in alice.get(BASE + f'/book.php?id={book_id}').text, f'book {book_id} links to its own listening preview')
+    selected = alice.get(BASE + '/discover.php?listen=7').text
+    check('data-book-id="7"' in selected and 'data-audiobook' in selected and 'data-preview-chapter' not in selected, 'switching back to a recording restores its player and real chapters')
+    check('Listen to audiobook' in alice.get(BASE + '/book.php?id=7').text, 'recorded title retains its full-audiobook action')
+    original_description = sql('SELECT description FROM books WHERE id=14')[0]['description']
+    sql('UPDATE books SET description=? WHERE id=14', [''])
+    check('A synopsis has not been added' in alice.get(BASE + '/discover.php?listen=14').text, 'book without a synopsis has a nonempty, honest preview')
+    sql('UPDATE books SET description=? WHERE id=14', [original_description])
+    invalid = alice.get(BASE + '/discover.php?listen=99999999')
+    check('listen=' not in invalid.url and 'That book is no longer available' in invalid.text, 'deleted or unknown listening selections recover with a visible message')
     r = post(admin, '/admin/content.php', {'action': 'collection', 'title': MARKER, 'subtitle': 'Curated shelf', 'sort_order': 0, 'is_active': 1, 'books[]': [7, 14]})
     collection = sql('SELECT id FROM collections WHERE title=?', [MARKER])[0]['id']
     check('Collection saved' in r.text and len(sql('SELECT book_id FROM collection_books WHERE collection_id=?', [collection])) == 2, 'collection membership saved')
