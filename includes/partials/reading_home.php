@@ -8,7 +8,7 @@ $fullChapters = $fullAudio ? chapters_for((int)$audioBook['id'],'audio') : [];
 $collectionUrl = !empty($homeCollection) ? url('collection.php',['id'=>$homeCollection['id']]) : url('discover.php',['view'=>'all']);
 $collectionShelf = !empty($homeCollection) ? $collectionBooks : $arrivals;
 $previewChapters = $audioBook ? [
-    ['title' => 'A little about ' . $audioBook['title'], 'text' => $audioBook['description']],
+    ['title' => 'A little about ' . $audioBook['title'], 'text' => trim((string)$audioBook['description']) !== '' ? $audioBook['description'] : $audioBook['title'] . ' by ' . $audioBook['author'] . '. A synopsis has not been added for this title yet. Open the book details to explore this title.'],
     ['title' => 'Your next chapter starts here', 'text' => $audioBook['title'] . ' by ' . $audioBook['author'] . '. ' . ((int)$audioBook['available'] > 0 ? plural((int)$audioBook['available'], 'copy', 'copies') . ' available to borrow. Open the book details to start reading.' : 'All copies are currently on loan. Open the book details to place a hold.')],
 ] : [];
 ?>
@@ -46,8 +46,17 @@ $previewChapters = $audioBook ? [
   </section>
 
   <aside class="reading-utilities" aria-label="Listening and chapters">
-    <section class="reading-audio" aria-labelledby="audio-heading"<?= !$fullAudio ? ' data-reading-player' : '' ?>>
-      <div class="reading-section-heading"><h2 id="audio-heading">Audio Book</h2><?php if ($audioBook): ?><a href="<?= e($bookUrl($audioBook)) ?>" aria-label="View audio preview book details"><?= icon('chevron-right') ?></a><?php endif; ?></div>
+    <section class="reading-audio" id="listening" aria-labelledby="audio-heading"<?= !$fullAudio ? ' data-reading-player' : '' ?>>
+      <div class="reading-section-heading"><h2 id="audio-heading">Audio &amp; previews</h2><?php if ($audioBook): ?><a href="<?= e($bookUrl($audioBook)) ?>" aria-label="View selected book details"><?= icon('chevron-right') ?></a><?php endif; ?></div>
+      <?php if ($audioChoices): ?>
+      <form class="reading-audio-picker" method="get" action="<?= e(url('discover.php')) ?>#listening">
+        <label for="listening-book">Choose a book</label>
+        <select id="listening-book" name="listen" data-autosubmit>
+          <?php foreach ($audioChoices as $choice): ?><option value="<?= (int)$choice['id'] ?>" <?= (int)$choice['id']===(int)($audioBook['id'] ?? 0) ? 'selected' : '' ?>><?= e($choice['title']) ?> · <?= $choice['has_audio'] ? 'Audiobook' : 'Read-aloud preview' ?></option><?php endforeach; ?>
+        </select>
+        <noscript><button class="btn btn--ghost btn--sm" type="submit">Load book</button></noscript>
+      </form>
+      <?php endif; ?>
       <?php if ($fullAudio): ?>
       <?= audiobook_html($audioBook) ?>
       <?php elseif ($audioBook): ?>

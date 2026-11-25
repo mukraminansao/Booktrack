@@ -21,7 +21,13 @@ check('plain loopback HTTP does not advertise HSTS',get('/login.php').headers.ge
 jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar));page=client.open(BASE+'/login.php',timeout=30).read().decode();token=re.search(r'name="_token" value="([^"]+)"',page).group(1)
 check('public demo buttons remain available','Sign in as member' in page and 'Sign in as librarian' in page)
 body=client.open(BASE+'/login.php',urllib.parse.urlencode({'_token':token,'username':'alice','password':'member123'}).encode(),timeout=30).read().decode()
-check('member reaches warm dashboard','reading-home' in body and 'Happy reading' in body);check('dashboard retains reading and listening sections','Popular Now' in body and 'Audio Book' in body and 'Chapters' in body)
+check('member reaches warm dashboard','reading-home' in body and 'Happy reading' in body);check('dashboard retains reading and listening sections','Popular Now' in body and 'Audio &amp; previews' in body and 'Chapters' in body)
+check('dashboard offers a book chooser','id="listening-book"' in body and 'name="listen"' in body)
+for book_id,title in [(14,'The Alchemist'),(9,'The Psychology of Money')]:
+ selected=client.open(BASE+'/discover.php?listen='+str(book_id),timeout=30).read().decode()
+ check('book chooser loads '+title,'A little about '+title in selected and 'data-reading-player' in selected and re.search(r'<option value="'+str(book_id)+r'" selected',selected) is not None)
+ details=client.open(BASE+'/book.php?id='+str(book_id),timeout=30).read().decode()
+ check('book details offer the matching preview: '+title,'Listen to preview' in details and 'listen='+str(book_id) in details)
 check('dashboard renders without PHP warnings','Fatal error' not in body and 'Warning:' not in body)
 for path in ['/assets/css/reading-home.css','/assets/js/reading-state.js','/assets/vendor/pdfjs/build/pdf.mjs']:
  response=get(path);check('release asset loads: '+path,response.status==200 and len(response.read())>100)
