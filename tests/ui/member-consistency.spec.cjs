@@ -32,6 +32,8 @@ for(const width of [1440,1280,390])for(const theme of ['light','dark']){
     for(const [name,route] of routes){
       await page.goto(route);await expect(page.locator('html')).toHaveAttribute('data-theme',theme);
       const metrics=await shell(page);baseline??=metrics;expect(metrics,`${name} shell must match dashboard`).toEqual(baseline);
+      const approvedPalette=theme==='dark'?['#24291f','#1a2018','#f1eee2','#c4c5b8','#e0ce8c','#bfd3aa','#f1b3a0']:[width>=1200?'#f1efe3':'#f8f5ed',width>=1200?'#fff':'#fffdf9','#201f1a','#68655e','#826a29','#42633c','#9d3c30'];
+      expect(metrics.palette,`${name} keeps the approved theme palette`).toEqual(approvedPalette);
       expect(Number.parseFloat(metrics.headerHeight)).toBe(width===1440?72:width===1280?64:74);
       expect(metrics.sidebar[1]).toBe(width===1440?80:width===1280?68:0);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
