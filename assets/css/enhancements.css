@@ -48,7 +48,6 @@
 [data-theme=light] .admin-surface {--bg:#f8f5ed;--surface:#fffdf9;--surface-2:#ede5d5;--glass:#f8f5ede6;--glass-strong:#fffdf9;--text:#201f1a;--text-2:#555149;--muted:#68655e;--faint:#756d60;--border:#e3dbcd;--border-strong:#c9bfac;--rail:#f1efe3;--rail-border:#e3dbcd;--gold:#a48b3c;--gold-text:#826a29;--font-display:'Times New Roman',Times,serif;background:var(--bg)}
 .admin-surface .table td,.admin-surface .table th {font-size:14px}
 .admin-surface .page-head h1 {font-size:38px}
-.reading-home.member-page .book-card__title,.reading-home.member-page .book-card__author,.reading-home.member-page .status,.reading-home.member-page .small {font-size:14px}
 .reading-home.member-page .card,.reading-home.member-page .loan-card {border-color:var(--border)}
 :is(.reader-page,.listening-page) button:focus-visible {outline:2px solid var(--focus);outline-offset:3px}
 .admin-surface .audiobook {--ink:var(--text);--quiet:var(--muted);--paper-light:var(--surface)}
@@ -67,11 +66,6 @@
  .chapter-edit-row{grid-template-columns:minmax(0,1fr) 80px}.chapter-edit-row .btn{grid-column:1/-1;justify-self:end}
  .collection-picker{grid-template-columns:minmax(0,1fr)}
  .content-book-list{grid-template-columns:minmax(0,1fr)}
- .reading-home .reading-player-controls button{width:44px;height:44px;min-width:44px}
- .reading-home .reading-player-bottom{min-height:48px}
- .reading-home:not(.member-page) .reading-greeting p,.reading-home:not(.member-page) .reading-feature .reading-excerpt{font-size:14px}
- .reading-home:not(.member-page) .reading-book>span:last-child{font-size:12px}
- .reading-home:not(.member-page) .reading-update-description{font-size:13px}
  .audio-speed select{min-height:44px;font-size:13px}
  .audiobook .reading-player-progress input::-webkit-slider-thumb{width:26px;height:26px;border:7px solid transparent;background-clip:padding-box;box-shadow:inset 0 0 0 1px var(--quiet)}
  .audiobook .reading-player-progress input::-moz-range-thumb{width:12px;height:12px;border:7px solid transparent;background-clip:padding-box;box-shadow:inset 0 0 0 1px var(--quiet)}

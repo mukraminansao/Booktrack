@@ -146,7 +146,7 @@ if ($isMemberSurface) {
       ? array_values(array_filter($nav, fn($i) => $i[1] !== 'activity'))
       : [
           ['discover.php', 'discover', 'home', 'Home'],
-          ['discover.php?view=all', 'catalog', 'library', 'Catalogue'],
+          ['discover.php?view=all', 'catalog', 'library', 'Books'],
           ['loans.php', 'loans', 'stopwatch', 'Loans', $navCounts['loans']],
           ['favorites.php', 'favorites', 'bookmark', 'Saved'],
           ['profile.php', 'profile', 'settings', 'Profile'],
