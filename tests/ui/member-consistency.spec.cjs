@@ -1,4 +1,7 @@
 const {test,expect}=require('@playwright/test');
+const fs=require('node:fs/promises');
+const path=require('node:path');
+const {execFileSync}=require('node:child_process');
 const routes=[['dashboard','/discover.php'],['catalogue','/discover.php?view=all'],['book','/book.php?id=7'],['loans','/loans.php'],['favorites','/favorites.php'],['profile','/profile.php'],['messages','/messages.php']];
 const screenshotStyle='.nav__icon{background:transparent!important;box-shadow:none!important;color:var(--quiet)!important}.nav a{color:var(--quiet)!important}.nav a::after{display:none!important}.nav__icon .icon{stroke-width:1.3!important}.topbar__btn .count{visibility:hidden!important}.tabbar a{color:var(--quiet)!important;font-weight:500!important}.tabbar__icon{background:transparent!important;box-shadow:none!important;color:var(--quiet)!important}.tabbar .icon{stroke-width:1.4!important}';
 async function signIn(page,context,theme){
@@ -13,6 +16,13 @@ async function shell(page){
     const body=getComputedStyle(document.body),rail=style('.sidebar'),header=style('.topbar');
     return {app:box('.app'),sidebar:box('.sidebar'),railDisplay:rail.display,railMargin:rail.margin,headerHeight:header.height,headerPadding:header.padding,iconSize:style('.nav__icon .icon').width,iconStroke:style('.nav a:not([aria-current]) .nav__icon .icon').strokeWidth,navGap:style('.nav').gap,searchSize:style('.reading-search input').fontSize,avatarSize:style('.reading-profile .avatar').width,palette:['--paper','--paper-light','--ink','--quiet','--gold-text','--green','--red'].map(v=>body.getPropertyValue(v).trim())};
   });
+}
+async function compareNavigation(reference,current,name,testInfo){
+  const first=testInfo.outputPath('navigation-reference.png'),second=testInfo.outputPath('navigation-'+name+'.png');
+  await fs.writeFile(first,reference);await fs.writeFile(second,current);
+  const difference=JSON.parse(execFileSync('php',[path.join(__dirname,'pixel_compare.php'),first,second],{encoding:'utf8'}));
+  if(difference.ratio>.0025){await testInfo.attach('dashboard-navigation.png',{body:reference,contentType:'image/png'});await testInfo.attach('current-navigation.png',{body:current,contentType:'image/png'});}
+  expect(difference.ratio,`${name} navigation pixel difference: ${JSON.stringify(difference)}`).toBeLessThanOrEqual(.0025);
 }
 for(const width of [1440,1280,390])for(const theme of ['light','dark']){
   test(`shared shell ${width}px ${theme}`,async({page,context},testInfo)=>{
@@ -31,7 +41,7 @@ for(const width of [1440,1280,390])for(const theme of ['light','dark']){
       const header=await page.locator('.topbar').screenshot({animations:'disabled',caret:'hide',style:screenshotStyle});
       headerImage??=header;expect(header.equals(headerImage),`${name} header pixels must match dashboard`).toBe(true);
       const nav=await page.locator(width<768?'.tabbar':'.sidebar .nav').screenshot({animations:'disabled',style:screenshotStyle});
-      navImage??=nav;if(!nav.equals(navImage)){await testInfo.attach('dashboard-navigation.png',{body:navImage,contentType:'image/png'});await testInfo.attach('current-navigation.png',{body:nav,contentType:'image/png'});console.log(JSON.stringify({route:name,width,theme,referenceSize:[navImage.readUInt32BE(16),navImage.readUInt32BE(20)],actualSize:[nav.readUInt32BE(16),nav.readUInt32BE(20)],rect:await page.locator(width<768?'.tabbar':'.sidebar .nav').boundingBox()}));}expect(nav.equals(navImage),`${name} navigation pixels must match dashboard apart from active state`).toBe(true);
+      navImage??=nav;await compareNavigation(navImage,nav,name,testInfo);
       await page.screenshot({path:testInfo.outputPath(`${name}-${width}-${theme}.png`),fullPage:true,animations:'disabled'});
     }
     expect(errors).toEqual([]);
