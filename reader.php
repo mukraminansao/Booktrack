@@ -9,7 +9,7 @@ require __DIR__ . '/includes/partials/header.php';
 ?>
 <link rel="stylesheet" href="<?= e(asset('vendor/pdfjs/web/pdf_viewer.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/reader.css')) ?>">
-<a class="back-link" href="<?= e(url('book.php',['id'=>$book['id']])) ?>"><?= icon('arrow-left') ?> Back to book</a>
+<?= navigation_back_html('book.php?id='.(int)$book['id'],'Back to book') ?>
 <header class="page-head"><div class="page-head__title"><h1><?= e($book['title']) ?></h1><p><?= e($book['author']) ?> · Your place is saved to your account.</p></div><a class="btn btn--outline" href="<?= e(url('read.php',['id'=>$book['id']])) ?>" target="_blank" rel="noopener">Open original PDF</a></header>
 <section class="reader" data-reader data-progress-version="<?= e(progress_version((int)$user['id'],(int)$book['id'],'ebook')) ?>" data-revision="<?= e(reading_revision((int)$book['id'],'ebook')) ?>" data-book-id="<?= (int)$book['id'] ?>" data-pdf="<?= e(url('read.php',['id'=>$book['id']])) ?>" data-api="<?= e(url('api/reading.php')) ?>" data-page="<?= max(1,(int)($progress['position'] ?? 1)) ?>" data-completed="<?= !empty($progress['completed']) ? '1':'0' ?>">
   <div class="reader-toolbar" role="group" aria-label="Reading controls">

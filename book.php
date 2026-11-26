@@ -3,6 +3,7 @@ require __DIR__ . '/includes/bootstrap.php';
 $user = require_login();
 $uid = (int)$user['id'];
 $isMember = $user['role'] === 'member';
+$bookBack=navigation_back($isMember?'discover.php?view=all':'admin/books.php',$isMember?'Back to catalogue':'Back to books');
 
 $book = find_book(input_int('id'));
 if (!$book) {
@@ -30,7 +31,7 @@ if (is_post() && $isMember) {
     } catch (DomainException $ex) {
         flash('error', $ex->getMessage());
     }
-    redirect('book.php', ['id' => $book['id']]);
+    redirect('book.php', ['id' => $book['id'],'return_to'=>$bookBack['href']]);
 }
 
 $myLoan = $isMember ? q_one('SELECT * FROM loans WHERE user_id = ? AND book_id = ? AND status IN ' . ACTIVE_LOAN, [$uid, $book['id']]) : null;
@@ -71,7 +72,7 @@ $title = $book['title'];
 $active = $isMember ? 'discover' : 'books';
 require __DIR__ . '/includes/partials/header.php';
 ?>
-<a class="back-link" href="<?= e(url($isMember ? 'discover.php?view=all' : 'admin/books.php')) ?>"><?= icon('arrow-left') ?> <span>Back to <?= $isMember ? 'catalogue' : 'books' ?></span></a>
+<a class="back-link" data-navigation-back href="<?= e($bookBack['href']) ?>"><?= icon('arrow-left') ?> <span><?= e($bookBack['label']) ?></span></a>
 
 <section class="book-hero">
   <?= cover_ambient($book) ?>
@@ -123,23 +124,23 @@ require __DIR__ . '/includes/partials/header.php';
         <a class="btn btn--lg btn--outline" href="<?= e(url('loans.php')) ?>"><?= icon('book') ?> Go to My loans</a>
       <?php elseif ($myHold && !$holdReady): ?>
         <form method="post" data-confirm="You'll lose your place in line for “<?= e($book['title']) ?>”." data-confirm-title="Leave the line?" data-confirm-ok="Leave the line">
-          <?= csrf_field() ?><input type="hidden" name="action" value="cancel_hold">
+          <?= csrf_field() ?><input type="hidden" name="return_to" value="<?= e($bookBack['href']) ?>"><input type="hidden" name="action" value="cancel_hold">
           <button class="btn btn--lg btn--outline" type="submit"><?= icon('x') ?> Leave the line</button>
         </form>
       <?php elseif ($canBorrow): ?>
         <form method="post">
-          <?= csrf_field() ?><input type="hidden" name="action" value="borrow">
+          <?= csrf_field() ?><input type="hidden" name="return_to" value="<?= e($bookBack['href']) ?>"><input type="hidden" name="action" value="borrow">
           <button class="btn btn--lg" type="submit"><?= icon('book') ?> Borrow for <?= (int)config('library.loan_days') ?> days</button>
         </form>
       <?php else: ?>
         <form method="post">
-          <?= csrf_field() ?><input type="hidden" name="action" value="hold">
+          <?= csrf_field() ?><input type="hidden" name="return_to" value="<?= e($bookBack['href']) ?>"><input type="hidden" name="action" value="hold">
           <button class="btn btn--lg" type="submit"><?= icon('clock') ?> Place a hold</button>
         </form>
       <?php endif; ?>
 
       <form method="post" action="<?= e(url('api/favorite.php')) ?>" data-favorite>
-        <?= csrf_field() ?><input type="hidden" name="book_id" value="<?= (int)$book['id'] ?>">
+        <?= csrf_field() ?><input type="hidden" name="return_to" value="<?= e($bookBack['href']) ?>"><input type="hidden" name="book_id" value="<?= (int)$book['id'] ?>">
         <button class="btn btn--outline btn--lg fav-toggle" type="submit" aria-pressed="<?= $fav ? 'true' : 'false' ?>" >
           <?= icon('heart') ?><span data-fav-label><?= $fav ? 'Saved to favorites' : 'Add to favorites' ?></span>
         </button>
@@ -148,7 +149,7 @@ require __DIR__ . '/includes/partials/header.php';
       <?php if ($book['pdf']): ?>
         <a class="btn btn--outline btn--lg" href="<?= e(reading_url($book)) ?>"><?= icon('file') ?> <?= $readingProgress && !$readingProgress['completed'] ? 'Continue reading' : 'Read e-book' ?></a>
       <?php endif; ?>
-      <?php if ($hasBookAudio): ?><a class="btn btn--outline btn--lg" href="<?= e(reading_url($book,'audio')) ?>">Listen to audiobook</a><?php else: ?><a class="btn btn--outline btn--lg" href="<?= e(url('discover.php',['listen'=>(int)$book['id']])) ?>#listening">Listen to preview</a><?php endif; ?>
+      <?php if ($hasBookAudio): ?><a class="btn btn--outline btn--lg" href="<?= e(reading_url($book,'audio')) ?>">Listen to audiobook</a><?php else: ?><a class="btn btn--outline btn--lg" href="#book-listening">Listen to preview</a><?php endif; ?>
       <button class="btn btn--outline btn--lg btn--share" type="button" data-share hidden><?= icon('share') ?> Share</button>
     </div>
     <?php else: ?>
@@ -173,7 +174,19 @@ require __DIR__ . '/includes/partials/header.php';
 
 <?php if ($readingProgress): ?><p class="reading-account-progress"><?= $readingProgress['completed'] ? 'Finished' : 'Your place: page '.(int)$readingProgress['position'] ?><?= (int)$readingProgress['total'] ? ' of '.(int)$readingProgress['total'] : '' ?> · <a class="link" href="<?= e(reading_url($book)) ?>">Open your reader</a></p><?php endif; ?>
 
-<?php if ($hasBookAudio): ?><section aria-label="Audiobook"><?= audiobook_html($book) ?><a class="link" href="<?= e(reading_url($book,'audio')) ?>">Open chapters and bookmarks</a></section><?php endif; ?>
+<section id="book-listening" class="book-listening" aria-labelledby="book-audio-heading"<?= !$hasBookAudio?' data-reading-player':'' ?>>
+  <div class="reading-section-heading"><h2 id="book-audio-heading"><?= $hasBookAudio?'Audiobook':'Listen to a preview' ?></h2></div>
+  <?php if ($hasBookAudio): ?>
+    <?= audiobook_html($book) ?><a class="link" href="<?= e(reading_url($book,'audio')) ?>">Open chapters and bookmarks</a>
+  <?php else: ?>
+    <p class="muted small">A read-aloud of this book’s catalogue summary.</p>
+    <?php $previewBook=$book; require __DIR__.'/includes/partials/preview_player.php'; ?>
+    <ol class="reading-timeline">
+      <?php foreach(catalogue_preview_chapters($book) as $i=>$chapter): ?><li><button type="button" class="reading-chapter" data-preview-chapter="<?= $i ?>" data-preview-text="<?= e($chapter['text']) ?>" disabled><strong><?= e($chapter['title']) ?></strong><span class="reading-update-description"><?= e($chapter['text']) ?></span><span class="reading-update-status">Preview <?= $i+1 ?></span></button></li><?php endforeach; ?>
+    </ol>
+    <script src="<?= e(asset('js/reading-player.js')) ?>" defer></script>
+  <?php endif; ?>
+</section>
 
 <section class="ratings" id="reviews" aria-labelledby="reviews-h">
   <div class="section-title">
