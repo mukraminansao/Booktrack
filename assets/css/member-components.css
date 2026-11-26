@@ -125,3 +125,216 @@ html {scrollbar-gutter:stable}
  .reading-home .reading-feature {border-radius:8px}
 }
 @media(prefers-reduced-motion:reduce){.reading-home .btn{transition:none}}
+
+/* Reading scale: larger content, with layout reflow rather than page zoom. */
+.reading-home {--fs-xs:14px;--fs-sm:15px;--fs-md:16px;--fs-base:17px;--fs-lg:19px;--fs-xl:23px;font-size:17px;line-height:1.6}
+.reading-home.member-page .main {font-size:17px}
+.reading-home .member-breadcrumb {font-size:14px;gap:10px}
+.reading-home .member-breadcrumb a,.member-page .back-link {display:inline-flex;align-items:center;min-height:44px}
+.reading-home :is(.btn,.btn--sm,.btn--lg) {min-height:48px;font-size:16px;padding:12px 22px}
+.reading-home .btn--icon {width:48px;min-width:48px;height:48px;padding:11px}
+.reading-home :is(.input,.select,textarea) {min-height:48px;font-size:16px;line-height:1.5}
+.reading-home :is(.field label,.label,.field .hint,.field__help,.field__error,.alert,.flash) {font-size:15px;line-height:1.6}
+.reading-home .chip {font-size:15px;min-height:48px;padding:10px 14px}
+.reading-home .card {padding:28px}
+.reading-home .card--flush {padding:0}
+.reading-home .empty {font-size:16px}
+.reading-home .empty h3 {font-size:30px}
+.reading-home .reading-cta {font-size:16px;min-height:48px;padding:12px 23px;gap:12px}
+.reading-home .reading-cta .icon {width:20px;height:20px}
+.reading-home .reading-section-heading>a {font-size:15px;min-height:48px;min-width:48px}
+.reading-home .reading-greeting h1 {font-size:50px;line-height:1.08}
+.reading-home .reading-greeting p,.reading-home .reading-excerpt {font-size:17px;line-height:1.65}
+.reading-home .reading-meta,.reading-home .reading-signature {font-size:15px}
+.reading-home .reading-layout h2 {font-size:34px;line-height:1.2}
+.reading-home .reading-layout .reading-feature h2 {font-size:38px;line-height:1.12}
+.reading-home .reading-jacket {max-width:146px}
+.reading-home .reading-book,.reading-home .reading-book>span:not(.reading-jacket) {font-size:16px;line-height:1.5;max-width:150px}
+.reading-home .reading-art {max-width:400px}
+.reading-home .reading-collection-item {font-size:18px;gap:20px}
+.reading-home .reading-collection-item em,.reading-home .reading-collection-count {font-size:16px}
+.reading-home .reading-mini-stack {width:120px;min-width:120px;height:112px}
+.reading-home .reading-mini-cover {width:60px;height:90px}
+.reading-home .reading-chapter strong {font-size:18px;line-height:1.5}
+.reading-home .reading-update-description {font-size:16px;line-height:1.65}
+.reading-home .reading-update-status {font-size:14px}
+.reading-home .reading-player {padding:18px;gap:20px;min-height:158px}
+.reading-home .reading-utility-cover {width:76px;height:112px}
+.reading-home .reading-player-title {font-size:22px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}
+.reading-home .reading-player-author {font-size:16px}
+.reading-home .reading-player-bottom {position:static;display:grid;grid-template-columns:1fr auto;align-items:center;min-height:0;font-size:14px;gap:10px}
+.reading-home .reading-player-controls {position:static;grid-column:1/-1;grid-row:2;transform:none;justify-content:center;gap:12px}
+.reading-home .reading-player-controls button {width:48px;min-width:48px;height:48px}
+.reading-home .reading-player-controls .icon {width:23px;height:23px}
+.reading-home .reading-player-kind {max-width:none;font-size:14px}
+.reading-home .reading-player-progress {min-height:32px}
+.reading-home .reading-player-progress input {height:6px}
+.reading-home .reading-player-progress input::-webkit-slider-thumb {width:18px;height:18px}
+.reading-home .reading-player-progress input::-moz-range-thumb {width:18px;height:18px}
+.reading-home .reading-player-status,.reading-home .audio-status,.reading-home .reading-audio-picker {font-size:15px;line-height:1.6}
+.reading-home .preview-author-row {flex-wrap:wrap}
+.reading-home .preview-author-row .audio-speed select,.reading-home .audio-speed select {min-height:48px;font-size:16px;max-width:90px}
+.reading-home .listening-settings-button {width:48px;height:48px}
+.reading-home .listening-options label {font-size:16px;flex-wrap:wrap}
+.reading-home .listening-options input {min-height:32px}
+.reading-home .reading-menu {font-size:16px}
+.reading-home .reading-menu a,.reading-home .reading-menu button {min-height:48px}
+.reading-home button.reading-search[data-palette-open] {font-size:16px;min-height:48px;max-width:480px}
+.reading-home .reading-profile {font-size:15px;max-width:240px}
+.reading-home .reading-profile .avatar {width:46px;height:46px;font-size:15px}
+.reading-home .topbar {height:84px;min-height:84px}
+.reading-home .topbar__btn {width:48px;min-width:48px;height:48px;min-height:48px}
+.reading-home .topbar__btn .icon {width:28px;height:28px}
+.reading-home .sidebar {width:88px}
+.reading-home .nav a,.reading-home .nav__icon {width:56px;height:56px}
+.reading-home .nav__icon .icon {width:30px;height:30px}
+.reading-home .nav a::after {font-size:14px}
+.reading-home .palette__heading h2 {font-size:29px}
+.reading-home .palette__cancel {font-size:15px;min-height:48px}
+.reading-home .palette__welcome>span,.reading-home .palette__welcome a,.reading-home .palette__status {font-size:15px}
+.reading-home .palette__welcome a {min-height:48px}
+.reading-home .palette__group {font-size:13px}
+.reading-home .palette__text strong {font-size:23px}
+.reading-home .palette__text span,.reading-home .palette__side {font-size:14px;line-height:1.5}
+.reading-home .palette__side {max-width:90px}
+.reading-home .palette__thumb {width:40px}
+.reading-home .palette__item {grid-template-columns:44px minmax(0,1fr) auto;min-height:80px}
+.reading-home .palette__item--all strong,.reading-home .palette__empty {font-size:15px}
+.reading-home .palette__submit {width:48px;height:48px}
+.reading-home .listening-search-results strong {font-size:23px}
+.reading-home .listening-search-results span {font-size:15px}
+.member-page h1 {font-size:clamp(40px,3.6vw,54px);line-height:1.15}
+.member-page h2 {font-size:32px;line-height:1.25}
+.member-page h3 {font-size:27px;line-height:1.3}
+.member-page .page-head p,.member-page .back-link {font-size:16px}
+.member-page .book-grid {grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:36px 30px}
+.member-page .book-card {max-width:240px;gap:10px}
+.member-page .book-card__title {font-size:18px;line-height:1.45}
+.member-page .book-card__author,.member-page .book-card__rating,.member-page .status {font-size:15px;line-height:1.55}
+.member-page .book-card__fav {width:48px;height:48px}
+.member-page .book-hero {grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:48px}
+.member-page .book-hero__cover {max-width:300px}
+.member-page .book-hero h1 {font-size:clamp(42px,4vw,58px)}
+.member-page .book-hero__author {font-size:19px}
+.member-page .book-hero__category {font-size:14px}
+.member-page .book-actions {gap:14px}
+.member-page .prose {font-size:18px;line-height:1.8;max-width:66ch}
+.member-page .meta-list {font-size:16px;gap:18px 28px}
+.member-page .meta-list dt {font-size:14px}
+.member-page .shelf-row {grid-auto-columns:minmax(180px,calc((100% - 4 * 28px)/5));gap:28px}
+.member-page .badge {font-size:14px;padding:8px 12px}
+.member-page .loan-card {padding:24px;gap:22px}
+.member-page .loan-card__title {font-size:28px}
+.member-page .loan-card__due,.member-page .table th {font-size:15px}
+.member-page .loan-card .cover-md {width:82px}
+.member-page .table td {font-size:16px;line-height:1.55}
+.member-page .table .cover-sm {width:48px}
+.member-page .profile-tally {font-size:16px}
+.member-page .segmented button {font-size:16px;min-height:48px}
+.member-page .review__text,.member-page .msg__bubble,.member-page .chat__input textarea {font-size:17px;line-height:1.65}
+.member-page .review__name,.member-page .chat__who span,.member-page .chat__hint {font-size:14px}
+.member-page .msg__meta {font-size:13px}
+.member-page .chat__who strong {font-size:28px}
+.member-page .chat__send {width:48px;min-width:48px;height:48px}
+.member-page .libcard__kind,.member-page .libcard__since {font-size:13px}
+.member-page .libcard__brand {font-size:17px}
+.reading-home .reader-toolbar .btn {min-height:48px;font-size:16px}
+.reading-home :is(.reader-page-label,.reader-zoom-label,.reader-status,.reader-chapters,.reader-bookmarks,.audio-navigation .reader-chapters,.audio-navigation .reader-bookmarks) {font-size:16px}
+.reading-home :is(.reader-chapters span,.audio-navigation .reader-chapters span) {font-size:14px}
+.reading-home .reader-navigation summary,.reading-home .reader-chapters button,.reading-home .reader-bookmarks button {min-height:48px}
+@media(min-width:1200px) and (max-width:1439px){
+ .reading-home .sidebar {width:80px}
+ .reading-home .topbar {height:76px;min-height:76px}
+ .reading-home .nav a,.reading-home .nav__icon {width:52px;height:52px}
+ .reading-home .nav__icon .icon {width:28px;height:28px}
+ .reading-home .reading-greeting h1 {font-size:44px}
+ .reading-home .reading-layout h2 {font-size:31px}
+ .reading-home .reading-layout .reading-feature h2 {font-size:34px}
+ .reading-home .reading-jacket {max-width:126px}
+ .reading-home .reading-greeting p,.reading-home .reading-excerpt {font-size:16px}
+}
+@media(max-width:1199px){
+ .reading-home .sidebar {width:0}
+ .reading-home button.reading-search[data-palette-open] {font-size:15px;max-width:320px}
+ .reading-home .tabbar {height:calc(88px + env(safe-area-inset-bottom))}
+ .reading-home .tabbar__label {font-size:13px}
+ .reading-home .tabbar .icon {width:28px;height:28px}
+ .reading-home .tabbar__icon {height:36px;width:40px}
+ .reading-home .tabbar a {min-height:64px}
+ .reading-home {padding-bottom:calc(102px + env(safe-area-inset-bottom))}
+ .member-page .book-hero {grid-template-columns:240px minmax(0,1fr);gap:32px}
+}
+@media(max-width:767px){
+ .reading-home {font-size:16px}
+ .reading-home.member-page .main {font-size:16px}
+ .reading-home .topbar {height:82px;min-height:82px;padding:16px;gap:2px}
+ .reading-home .topbar__brand {font-size:25px;gap:6px}
+ .reading-home .compact-brand-mark .icon {width:27px;height:27px}
+ .reading-home .compact-account {width:42px;min-width:42px;height:48px}
+ .reading-home .compact-account .avatar {width:38px;height:38px;font-size:13px}
+ .reading-home .topbar__btn .icon {width:26px;height:26px}
+ .reading-home .reading-greeting h1 {font-size:38px}
+ .reading-home .reading-greeting p,.reading-home .reading-excerpt {font-size:16px}
+ .reading-home .reading-layout h2 {font-size:31px}
+ .reading-home .reading-layout .reading-feature h2 {font-size:32px;max-width:none}
+ .reading-home .reading-feature-link {width:48px;height:48px}
+ .reading-home .reading-feature {padding:22px}
+ .reading-home .reading-feature h2 {padding-right:38px}
+ .reading-home .reading-feature .reading-excerpt {-webkit-line-clamp:3}
+ .reading-home .reading-layout {gap:30px}
+ .reading-home .reading-covers {grid-template-columns:repeat(4,minmax(132px,1fr));gap:20px;padding:4px 8px 14px 0;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:thin}
+ .reading-home .reading-book {max-width:none;scroll-snap-align:start}
+ .reading-home .reading-jacket {max-width:160px}
+ .reading-home .reading-book>span:not(.reading-jacket) {max-width:none;font-size:16px}
+ .reading-home .reading-player {align-items:flex-start;gap:14px;padding:16px}
+ .reading-home .reading-utility-cover {width:64px;height:96px}
+ .reading-home .reading-player-title {font-size:21px}
+ .reading-home .reading-collection-item {flex-wrap:wrap;gap:16px}
+ .reading-home .reading-collection-item>span:nth-child(2) {flex:1}
+ .reading-home .reading-collection-count {margin:0 0 0 auto;font-size:15px}
+ .reading-home .reading-mini-stack {width:106px;min-width:106px;height:102px}
+ .reading-home .reading-mini-cover {width:54px;height:82px}
+ .reading-home dialog.palette {margin-top:90px;max-height:min(68dvh,600px)}
+ .reading-home .palette__heading h2 {font-size:26px}
+ .reading-home .palette__text strong {font-size:22px}
+ .reading-home .palette__side {max-width:72px}
+ .reading-home .palette__item {grid-template-columns:40px minmax(0,1fr) auto;gap:10px}
+ .member-page h1 {font-size:40px}
+ .member-page h2 {font-size:31px}
+ .member-page .book-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:32px 20px}
+ .member-page .book-card__title {font-size:17px}
+ .member-page .book-card__author,.member-page .book-card__rating,.member-page .status {font-size:14px}
+ .member-page .book-hero {grid-template-columns:minmax(0,1fr);gap:32px}
+ .member-page .book-hero__cover {width:min(70%,230px);max-width:230px}
+ .member-page .book-hero h1 {font-size:42px}
+ .member-page .book-actions .btn {min-height:50px;font-size:16px;padding:13px 20px}
+ .member-page .meta-list {font-size:16px}
+ .member-page .prose {font-size:17px}
+ .member-page .loan-card .cover-md {width:72px}
+ .member-page .loan-card__title {font-size:26px}
+ .member-page .loan-card {padding:20px;gap:16px}
+ .member-page .loan-card__actions {flex-wrap:wrap}
+ .member-page .loan-card__actions>form {flex:1 1 140px}
+ .member-page .shelf-row {grid-auto-columns:58%;gap:22px}
+ .member-page .chat {height:calc(100dvh - 170px);min-height:440px}
+ .member-page .libcard {padding:20px;min-height:250px}
+ .member-page .card {padding:24px}
+ .member-page .card--flush {padding:0}
+ .reading-home.reader-page .page-head h1 {font-size:40px}
+}
+@media(max-width:479px){
+ .reading-home .reading-hero {grid-template-columns:minmax(0,1fr);gap:26px}
+ .reading-home .reading-art {width:min(100%,320px);margin:0 auto;justify-self:center}
+ .reading-home .reading-greeting p {max-width:38ch}
+ .reading-home .reading-feature {grid-column:auto}
+ .reading-home .reading-feature h2 {font-size:32px}
+ .reading-home .reading-book {min-width:132px}
+}
+@media(max-width:359px){
+ .reading-home .topbar {padding-inline:12px;gap:0}
+ .reading-home .topbar__brand {font-size:22px;gap:5px}
+ .reading-home .compact-brand-mark .icon {width:24px;height:24px}
+ .reading-home .topbar__btn {width:44px;min-width:44px;padding:8px}
+ .reading-home .palette__heading {align-items:flex-start}
+ .reading-home .palette__heading h2 {font-size:24px}
+}
