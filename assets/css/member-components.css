@@ -360,3 +360,9 @@ html {scrollbar-gutter:stable}
 .catalogue-categories {display:flex;align-items:flex-start;gap:12px;min-width:0;max-width:100%}
 .catalogue-categories__all {flex-shrink:0;white-space:nowrap}
 .catalogue-categories .catalogue-categories__list {flex:1;min-width:0;width:auto;max-width:100%;margin-inline:0;padding-inline:0;scroll-padding-inline:0}
+
+/* Night surfaces are neutral charcoal; gold is reserved for accents. */
+[data-theme=dark] .reading-home .reading-profile .avatar,[data-theme=dark] .reading-home .compact-account .avatar {background:#35312a;color:#e7d4a6}
+[data-theme=dark] .reading-home .reading-player-progress input {background:linear-gradient(to right,var(--ink) var(--preview-progress,0%),#454545 var(--preview-progress,0%))}
+[data-theme=dark] .reading-home :is(.modal,.palette,.reminders,.suggest,.listening-options,.reading-menu) {box-shadow:0 16px 64px #0006}
+[data-theme=dark] .reading-home :is(dialog.modal,dialog.palette)::backdrop {background:#0008;backdrop-filter:none}

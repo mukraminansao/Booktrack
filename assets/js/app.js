@@ -867,7 +867,7 @@
       document.cookie = 'bt_theme=' + theme + '; path=/; max-age=31536000; samesite=lax';
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) meta.content = document.body.classList.contains('reading-home')
-        ? (theme === 'light' ? '#F8F4EB' : '#1A2018')
+        ? (theme === 'light' ? '#F8F4EB' : '#171717')
         : (theme === 'light' ? '#EDF0F4' : '#0E1420');
       const scheme = document.querySelector('meta[name="color-scheme"]');
       if (scheme) scheme.content = theme;

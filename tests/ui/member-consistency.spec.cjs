@@ -32,8 +32,14 @@ for(const width of [1440,1280,390])for(const theme of ['light','dark']){
     for(const [name,route] of routes){
       await page.goto(route);await expect(page.locator('html')).toHaveAttribute('data-theme',theme);
       const metrics=await shell(page);baseline??=metrics;expect(metrics,`${name} shell must match dashboard`).toEqual(baseline);
-      const approvedPalette=theme==='dark'?['#24291f','#1a2018','#f1eee2','#c4c5b8','#e0ce8c','#bfd3aa','#f1b3a0']:[width>=1200?'#f1efe3':'#f8f5ed',width>=1200?'#fff':'#fffdf9','#201f1a','#68655e','#826a29','#42633c','#9d3c30'];
+      const approvedPalette=theme==='dark'?['#171717','#212121','#f0efed','#b7b5b1','#e0c486','#a9c8a0','#efb0a5']:[width>=1200?'#f1efe3':'#f8f5ed',width>=1200?'#fff':'#fffdf9','#201f1a','#68655e','#826a29','#42633c','#9d3c30'];
       expect(metrics.palette,`${name} keeps the approved theme palette`).toEqual(approvedPalette);
+      if(theme==='dark'){
+        const neutral=await page.evaluate(()=>{const s=getComputedStyle(document.body);return ['--paper','--paper-light','--surface-2','--surface-sunk','--border'].map(v=>s.getPropertyValue(v).trim());});
+        for(const value of neutral){const channels=value.slice(1).match(/../g).map(c=>parseInt(c,16));expect(channels[0]).toBe(channels[1]);expect(channels[1]).toBe(channels[2]);}
+        const luminance=hex=>{const rgb=hex.slice(1).match(/../g).map(c=>parseInt(c,16)/255).map(c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4);return .2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2];};
+        for(const foreground of [metrics.palette[2],metrics.palette[3],metrics.palette[4]])expect((luminance(foreground)+.05)/(luminance(metrics.palette[1])+.05)).toBeGreaterThanOrEqual(4.5);
+      }
       expect(Number.parseFloat(metrics.headerHeight)).toBe(width===1440?84:width===1280?76:82);
       expect(metrics.sidebar[1]).toBe(width===1440?88:width===1280?80:0);
       const shellBackground=await page.locator('.shell').evaluate(e=>getComputedStyle(e).backgroundImage);
@@ -95,6 +101,17 @@ test('preview position and settings continue between book details and dashboard'
   await expect(page.getByRole('button',{name:'Play book preview',exact:true})).toHaveAttribute('aria-pressed','false');
   await page.goto('/book.php?id=14');await expect(page.getByRole('slider',{name:'Preview position',exact:true})).toHaveValue('0');
   await page.goto('/discover.php');await expect(page.locator('.reading-player-title')).toHaveText('Atomic Habits');await expect(page.getByRole('slider',{name:'Preview position',exact:true})).toHaveValue('43');
+});
+
+test('Night switch applies charcoal immediately and preserves the choice between pages',async({page,context})=>{
+  await page.setViewportSize({width:390,height:844});await signIn(page,context,'light');await page.goto('/profile.php');
+  await page.getByRole('button',{name:'Night',exact:true}).click();await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+  await expect(page.locator('meta[name=theme-color]')).toHaveAttribute('content','#171717');
+  await expect(page.locator('.shell')).toHaveCSS('background-color','rgb(23, 23, 23)');
+  await page.goto('/discover.php');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');await expect(page.locator('meta[name=theme-color]')).toHaveAttribute('content','#171717');
+  await page.getByRole('button',{name:'Search',exact:true}).click();await expect(page.getByRole('dialog',{name:'Search',exact:true})).toHaveCSS('background-color','rgb(33, 33, 33)');
+  await page.getByRole('button',{name:'Close search',exact:true}).click();await page.goto('/profile.php');
+  await page.getByRole('button',{name:'Day',exact:true}).click();await expect(page.locator('html')).toHaveAttribute('data-theme','light');await expect(page.locator('.shell')).toHaveCSS('background-color','rgb(248, 245, 237)');
 });
 
 test('small phone search stays usable when live results fail',async({page,context})=>{
