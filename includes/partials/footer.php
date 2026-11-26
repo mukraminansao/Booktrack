@@ -25,13 +25,16 @@
 </div>
 
 <dialog class="palette" id="palette" aria-label="Search">
-  <div class="palette__field">
+  <div class="palette__heading"><h2>Search the library</h2><button class="palette__cancel" type="button" data-palette-close aria-label="Close search">Close <?= icon('x') ?></button></div>
+  <form class="palette__field" method="get" action="<?= e(url(current_user()['role'] === 'admin' ? 'admin/books.php' : 'discover.php')) ?>">
     <?= icon('search') ?>
-    <input type="search" data-palette-input autocomplete="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-expanded="true" aria-controls="palette-list" aria-autocomplete="list"
+    <input type="search" name="q" aria-label="Book title, author or category" data-palette-input autocomplete="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-expanded="false" aria-controls="palette-list" aria-autocomplete="list"
       placeholder="<?= current_user()['role'] === 'admin' ? 'Search books or members' : 'Search title, author or category' ?>">
-    <button class="palette__cancel" type="button" data-palette-close>Cancel</button>
-  </div>
-  <ul class="palette__list" id="palette-list" role="listbox" aria-label="Results" data-palette-list></ul>
+    <button class="palette__submit" type="submit" aria-label="Search catalogue"><?= icon('arrow-right') ?></button>
+  </form>
+  <p class="palette__status" data-palette-status role="status" aria-live="polite"></p>
+  <div class="palette__welcome" data-palette-welcome><p>A new favourite is a search away.</p><span>Find a title, an author, a category or an ISBN.</span><a href="<?= e(url(current_user()['role'] === 'admin' ? 'admin/books.php' : 'discover.php?view=all')) ?>">Browse the catalogue <?= icon('arrow-right') ?></a></div>
+  <ul class="palette__list" id="palette-list" role="listbox" aria-label="Results" data-palette-list hidden></ul>
 </dialog>
 <?php endif; ?>
 

@@ -1,4 +1,5 @@
 /* Warm ivory reference, shared by all member pages. */
+@font-face {font-family:'Source Serif 4';src:url('../fonts/source-serif-4-roman.woff2') format('woff2');font-weight:200 900;font-style:normal;font-display:swap}
 .reading-home {
  --paper:#f8f5ed;--paper-light:#fffdf9;--ink:#201f1a;--quiet:#68655e;
  --bg:var(--paper);--surface:var(--paper-light);--surface-2:#ece4d4;--surface-sunk:#f0eadd;
@@ -6,11 +7,11 @@
  --border:#e3dbcd;--border-strong:#c9bfac;--gold:#af9545;--gold-text:#826a29;--gold-hover:#927a32;--gold-soft:#af95451c;--gold-ink:#fffef5;--focus:#806a2d;
  --green:#42633c;--green-soft:#e6eddf;--blue:#4f6556;--blue-soft:#e5ebe4;--red:#9d3c30;--red-solid:#9d3c30;--red-soft:#f6e7e0;--rail:var(--paper);--rail-border:var(--border);--glass:var(--paper-light);--glass-strong:var(--paper-light);
  --shadow-cover:4px 8px 18px #39332529;--shadow:0 12px 32px #39332512;
- --font-display:'Times New Roman',Times,serif;
+ --font-display:'Source Serif 4',Georgia,serif;
  font-family:'DM Sans',sans-serif;color:var(--ink);color-scheme:light;font-size:1rem;line-height:1.5;
  background:radial-gradient(ellipse at 12% 10%,#f7ecdc 0,transparent 62%),#eaddcb;
 }
-.reading-home h1,.reading-home h2 {font-family:var(--font-display);font-weight:400;letter-spacing:-.04em;color:var(--ink)}
+.reading-home h1,.reading-home h2 {font-family:var(--font-display);font-weight:400;font-optical-sizing:auto;letter-spacing:-.035em;color:var(--ink);text-wrap:pretty}
 .reading-home .main {max-width:none;width:100%;margin:0;min-width:0}
 .reading-home:not(.member-page) .main {display:block;padding:28px 38px 32px}
 .reading-layout {display:grid;grid-template-columns:minmax(0,1fr);gap:26px}
