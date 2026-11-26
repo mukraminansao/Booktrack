@@ -3,7 +3,7 @@ const fs=require('node:fs/promises');
 const path=require('node:path');
 const {execFileSync}=require('node:child_process');
 const routes=[['dashboard','/discover.php'],['catalogue','/discover.php?view=all'],['book','/book.php?id=7'],['loans','/loans.php'],['favorites','/favorites.php'],['profile','/profile.php'],['messages','/messages.php']];
-const screenshotStyle='.topbar{background:var(--paper)!important}.nav__icon{background:transparent!important;box-shadow:none!important;color:var(--quiet)!important}.nav a{color:var(--quiet)!important}.nav a::after{display:none!important}.nav__icon .icon{stroke-width:1.3!important}.topbar__btn .count{visibility:hidden!important}.tabbar a{color:var(--quiet)!important;font-weight:500!important}.tabbar__icon{background:transparent!important;box-shadow:none!important;color:var(--quiet)!important}.tabbar .icon{stroke-width:1.4!important}';
+const screenshotStyle='.shell,.topbar{background:var(--paper)!important}.nav__icon{background:transparent!important;box-shadow:none!important;color:var(--quiet)!important}.nav a{color:var(--quiet)!important}.nav a::after{display:none!important}.nav__icon .icon{stroke-width:1.3!important}.topbar__btn .count{visibility:hidden!important}.tabbar a{color:var(--quiet)!important;font-weight:500!important}.tabbar__icon{background:transparent!important;box-shadow:none!important;color:var(--quiet)!important}.tabbar .icon{stroke-width:1.4!important}';
 async function signIn(page,context,theme){
   await context.addCookies([{name:'bt_theme',value:theme,url:test.info().project.use.baseURL||'http://127.0.0.1:8115'}]);
   await page.goto('/login.php');await page.getByLabel('Username',{exact:true}).fill('alice');await page.getByLabel('Password',{exact:true}).fill('member123');
@@ -53,7 +53,9 @@ for(const width of [1440,1280,390])for(const theme of ['light','dark']){
       }
       if(name!=='dashboard')await expect(page.getByRole('navigation',{name:'Breadcrumb',exact:true})).toBeVisible();
       const header=await page.locator('.topbar').screenshot({animations:'disabled',caret:'hide',style:screenshotStyle});
-      headerImage??=header;expect(header.equals(headerImage),`${name} header pixels must match dashboard`).toBe(true);
+      headerImage??=header;
+      if(!header.equals(headerImage)){await testInfo.attach('dashboard-header.png',{body:headerImage,contentType:'image/png'});await testInfo.attach('current-header.png',{body:header,contentType:'image/png'});}
+      expect(header.equals(headerImage),`${name} header pixels must match dashboard`).toBe(true);
       const nav=await page.locator(width<768?'.tabbar':'.sidebar .nav').screenshot({animations:'disabled',style:screenshotStyle});
       navImage??=nav;await compareNavigation(navImage,nav,name,testInfo);
       await page.screenshot({path:testInfo.outputPath(`${name}-${width}-${theme}.png`),fullPage:true,animations:'disabled'});
@@ -105,6 +107,7 @@ for(const width of [320,1920])test(`reading scale fits edge viewport ${width}px`
   for(const [name,route] of routes){
     await page.goto(route);await page.evaluate(()=>document.fonts.ready);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name} must fit ${width}px`).toBe(true);
+    if(width===320)expect(await page.locator('.tabbar__label').evaluateAll(labels=>labels.every(e=>e.scrollWidth<=e.clientWidth)),`${name} navigation labels must remain readable`).toBe(true);
     if(name==='dashboard'){
       const shelf=page.locator('.reading-covers');
       if(width===320)expect(await shelf.evaluate(e=>e.scrollWidth>e.clientWidth)).toBe(true);

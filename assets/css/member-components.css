@@ -189,6 +189,8 @@ html {scrollbar-gutter:stable}
 .reading-home .nav a,.reading-home .nav__icon {width:56px;height:56px}
 .reading-home .nav__icon .icon {width:30px;height:30px}
 .reading-home .nav a::after {font-size:14px}
+.reading-home .nav .count,.reading-home .rail-unread {width:20px;min-width:20px;height:20px;font-size:12px;line-height:20px}
+.reading-home .topbar__btn .count {min-width:18px;width:18px;height:18px;line-height:18px;font-size:12px}
 .reading-home .palette__heading h2 {font-size:29px}
 .reading-home .palette__cancel {font-size:15px;min-height:48px}
 .reading-home .palette__welcome>span,.reading-home .palette__welcome a,.reading-home .palette__status {font-size:15px}
@@ -238,6 +240,7 @@ html {scrollbar-gutter:stable}
 .member-page .chat__send {width:48px;min-width:48px;height:48px}
 .member-page .libcard__kind,.member-page .libcard__since {font-size:13px}
 .member-page .libcard__brand {font-size:17px}
+.member-page .libcard__name {font-size:34px}
 .reading-home .reader-toolbar .btn {min-height:48px;font-size:16px}
 .reading-home :is(.reader-page-label,.reader-zoom-label,.reader-status,.reader-chapters,.reader-bookmarks,.audio-navigation .reader-chapters,.audio-navigation .reader-bookmarks) {font-size:16px}
 .reading-home :is(.reader-chapters span,.audio-navigation .reader-chapters span) {font-size:14px}
