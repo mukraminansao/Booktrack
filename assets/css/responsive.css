@@ -35,7 +35,7 @@
 .reading-home .suggest {min-width:0;top:calc(100% + 8px);width:max(100%,300px);max-width:calc(100vw - 48px)}
 .reading-home.member-page .main {font-size:1rem;padding:28px 38px 38px}
 .reading-home.member-page h1,.reading-home.member-page h2 {font-weight:400}
-.reading-home.member-page :is(.btn,.input,.select,.chip) {min-height:44px}
+.reading-home.member-page :is(.btn,.input,.select,.chip) {min-height:48px}
 .reading-home.member-page .chat {height:calc(100dvh - 240px);min-height:480px}
 [data-theme=dark] .reading-home .app {border-color:#404736;box-shadow:0 16px 64px #0004}
 [data-theme=dark] .reading-home .shell {background:var(--paper)}
