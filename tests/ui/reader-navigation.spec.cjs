@@ -28,6 +28,13 @@ for(const [width,theme] of [[320,'light'],[390,'light'],[390,'dark'],[1440,'ligh
     await zoom.selectOption('1.5');
     await expect.poll(()=>stage.evaluate(e=>e.scrollHeight>e.clientHeight+100)).toBe(true);
     await stage.focus();await page.keyboard.press('End');await expect.poll(()=>stage.evaluate(e=>Math.abs(e.scrollHeight-e.clientHeight-e.scrollTop))).toBeLessThan(3);
+    // The shorter bottom-only pager can leave the document already at its end.
+    // Make room in the outer page while leaving the zoomed PDF at its boundary.
+    const outer=await page.evaluate(()=>({y:scrollY,max:document.documentElement.scrollHeight-innerHeight}));
+    if(outer.max-outer.y<10&&outer.y>20){
+      await page.mouse.move(4,100);await page.mouse.wheel(0,-120);
+      await expect.poll(()=>page.evaluate(()=>scrollY)).toBeLessThan(outer.y-10);
+    }
     const view=await stage.boundingBox();await page.mouse.move(view.x+Math.min(view.width/2,width/2),Math.min(height-140,view.y+view.height/2));
     const before=await page.evaluate(()=>scrollY);await page.mouse.wheel(0,400);
     await expect.poll(()=>page.evaluate(()=>scrollY)).toBeGreaterThan(before+10);
