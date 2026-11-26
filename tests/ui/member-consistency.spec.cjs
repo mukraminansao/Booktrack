@@ -43,10 +43,15 @@ for(const width of [1440,1280,390])for(const theme of ['light','dark']){
       await expect(page.locator('#main')).toBeVisible();await expect(page.locator('#main h1')).toBeVisible();
       if(name==='dashboard'){
         expect(await page.locator('.reading-greeting p').evaluate(e=>parseFloat(getComputedStyle(e).fontSize))).toBeGreaterThanOrEqual(16);
-        expect((await page.locator('.reading-jacket').first().boundingBox()).width).toBeGreaterThan(110);
+        const coverWidth=(await page.locator('.reading-jacket').first().boundingBox()).width;
+        expect(coverWidth).toBeGreaterThan(width<768?50:110);
+        if(width<768){expect(coverWidth).toBeLessThanOrEqual(108);expect(await page.locator('.reading-covers').evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);}
         expect((await page.locator('.reading-cta').boundingBox()).height).toBeGreaterThanOrEqual(48);
       }
-      if(name==='catalogue')expect(await page.locator('.book-card__title').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize))).toBeGreaterThanOrEqual(17);
+      if(name==='catalogue'){
+        expect(await page.locator('.book-card__title').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize))).toBeGreaterThanOrEqual(17);
+        if(width<768)expect((await page.locator('.book-grid .book-card__cover').first().boundingBox()).width).toBeLessThanOrEqual(72);
+      }
       if(name==='book'){
         expect(await page.locator('.prose').evaluate(e=>parseFloat(getComputedStyle(e).fontSize))).toBeGreaterThanOrEqual(17);
         const action=page.locator('.book-actions .btn').first();expect(await action.evaluate(e=>parseFloat(getComputedStyle(e).fontSize))).toBeGreaterThanOrEqual(16);expect((await action.boundingBox()).height).toBeGreaterThanOrEqual(48);
@@ -110,7 +115,7 @@ for(const width of [320,1920])test(`reading scale fits edge viewport ${width}px`
     if(width===320)expect(await page.locator('.tabbar__label').evaluateAll(labels=>labels.every(e=>e.scrollWidth<=e.clientWidth)),`${name} navigation labels must remain readable`).toBe(true);
     if(name==='dashboard'){
       const shelf=page.locator('.reading-covers');
-      if(width===320)expect(await shelf.evaluate(e=>e.scrollWidth>e.clientWidth)).toBe(true);
+      if(width===320){expect(await shelf.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);await expect(shelf.locator('.reading-book')).toHaveCount(4);}
     }
     if(name==='book')await expect(page.getByRole('link',{name:'Listen to preview',exact:true})).toBeVisible();
     await page.screenshot({path:testInfo.outputPath(`${name}-${width}-light.png`),fullPage:true,animations:'disabled'});
