@@ -14,7 +14,7 @@ async function shell(page){
   return page.evaluate(()=>{
     const style=s=>getComputedStyle(document.querySelector(s));const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return [r.x,r.width].map(n=>Math.round(n*100)/100);};
     const body=getComputedStyle(document.body),rail=style('.sidebar'),header=style('.topbar');
-    return {app:box('.app'),sidebar:box('.sidebar'),railDisplay:rail.display,railMargin:rail.margin,headerHeight:header.height,headerPadding:header.padding,iconSize:style('.nav__icon .icon').width,iconStroke:style('.nav a:not([aria-current]) .nav__icon .icon').strokeWidth,navGap:style('.nav').gap,searchSize:style('.reading-search input').fontSize,avatarSize:style('.reading-profile .avatar').width,palette:['--paper','--paper-light','--ink','--quiet','--gold-text','--green','--red'].map(v=>body.getPropertyValue(v).trim())};
+    return {app:box('.app'),sidebar:box('.sidebar'),railDisplay:rail.display,railMargin:rail.margin,headerHeight:header.height,headerPadding:header.padding,iconSize:style('.nav__icon .icon').width,iconStroke:style('.nav a:not([aria-current]) .nav__icon .icon').strokeWidth,navGap:style('.nav').gap,searchSize:style('.reading-search').fontSize,avatarSize:style('.reading-profile .avatar').width,palette:['--paper','--paper-light','--ink','--quiet','--gold-text','--green','--red'].map(v=>body.getPropertyValue(v).trim())};
   });
 }
 async function compareNavigation(reference,current,name,testInfo){
@@ -46,6 +46,24 @@ for(const width of [1440,1280,390])for(const theme of ['light','dark']){
       navImage??=nav;await compareNavigation(navImage,nav,name,testInfo);
       await page.screenshot({path:testInfo.outputPath(`${name}-${width}-${theme}.png`),fullPage:true,animations:'disabled'});
     }
+    // Search stays compact and uses the same accessible flow at every size/theme.
+    const trigger=page.locator('[data-palette-open]:visible');await trigger.click();
+    const dialog=page.getByRole('dialog',{name:'Search',exact:true});await expect(dialog).toBeVisible();
+    const query=dialog.getByRole('combobox',{name:'Book title, author or category',exact:true});
+    await expect(query).toBeFocused();await expect(dialog.getByText('A new favourite is a search away.',{exact:true})).toBeVisible();
+    const panel=await dialog.boundingBox();expect(panel.height).toBeLessThan(350);expect(panel.width).toBeLessThan(width);
+    await expect(query).toHaveCSS('border-top-width','0px');await expect(query).toHaveCSS('font-size','16px');
+    await page.screenshot({path:testInfo.outputPath(`search-idle-${width}-${theme}.png`),animations:'disabled'});
+    await query.fill('Atomic');await expect(dialog.getByRole('option').filter({hasText:'Atomic Habits'})).toBeVisible();
+    await page.screenshot({path:testInfo.outputPath(`search-results-${width}-${theme}.png`),animations:'disabled'});
+    await query.fill('zzzz-nothing-matches');await expect(dialog.getByText('Nothing matches “zzzz-nothing-matches”',{exact:true})).toBeVisible();
+    await query.fill('');await expect(dialog.getByText('A new favourite is a search away.',{exact:true})).toBeVisible();
+    await query.press('Escape');await expect(dialog).not.toBeVisible();await expect(trigger).toBeFocused();
+    await page.keyboard.press('/');await expect(dialog).toBeVisible();await query.fill('Atomic');
+    await expect(dialog.getByRole('option').filter({hasText:'Atomic Habits'})).toBeVisible();await query.press('ArrowDown');await query.press('Enter');
+    await expect(page).toHaveURL(/book\.php\?id=7&return_to=/);
+    expect(new URL(page.url()).searchParams.get('return_to')).toBe('/messages.php');
+    await page.locator('[data-navigation-back]').click();await expect(page).toHaveURL(/\/messages\.php$/);
     expect(errors).toEqual([]);
   });
 }
@@ -58,4 +76,14 @@ test('preview position and settings continue between book details and dashboard'
   await expect(page.getByRole('button',{name:'Play book preview',exact:true})).toHaveAttribute('aria-pressed','false');
   await page.goto('/book.php?id=14');await expect(page.getByRole('slider',{name:'Preview position',exact:true})).toHaveValue('0');
   await page.goto('/discover.php');await expect(page.locator('.reading-player-title')).toHaveText('Atomic Habits');await expect(page.getByRole('slider',{name:'Preview position',exact:true})).toHaveValue('43');
+});
+
+test('small phone search stays usable when live results fail',async({page,context})=>{
+  await page.setViewportSize({width:320,height:640});await signIn(page,context,'light');
+  await page.route('**/api/search.php?*',route=>route.abort());
+  await page.getByRole('button',{name:'Search',exact:true}).click();
+  const dialog=page.getByRole('dialog',{name:'Search',exact:true}),query=dialog.getByRole('combobox');
+  const bounds=await dialog.boundingBox();expect(bounds.x).toBeGreaterThanOrEqual(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(320);expect(bounds.height).toBeLessThan(350);
+  await query.fill('Atomic');await expect(dialog.getByRole('status')).toHaveText('Live search is unavailable. Press Enter to search the catalogue.');
+  await query.press('Enter');await expect(page).toHaveURL(/discover\.php\?q=Atomic$/);await expect(page.locator('.book-card__title').filter({hasText:'Atomic Habits'})).toBeVisible();
 });

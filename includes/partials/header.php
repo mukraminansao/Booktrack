@@ -80,6 +80,7 @@ if ($isMemberSurface) {
   <link rel="icon" type="image/png" href="<?= e(asset('img/favicon.png')) ?>">
   <link rel="apple-touch-icon" href="<?= e(asset('img/icon-512.png')) ?>">
   <link rel="preload" href="<?= e(url('assets/fonts/dm-sans.woff2')) ?>" as="font" type="font/woff2" crossorigin>
+  <?php if ($isMemberSurface): ?><link rel="preload" href="<?= e(url('assets/fonts/source-serif-4-roman.woff2')) ?>" as="font" type="font/woff2" crossorigin><?php endif; ?>
   <?php if (!$isMemberSurface): ?><link rel="preload" href="<?= e(url('assets/fonts/bricolage-grotesque.woff2')) ?>" as="font" type="font/woff2" crossorigin><?php endif; ?>
   <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
   <?php if ($user): ?><link rel="stylesheet" href="<?= e(asset('css/enhancements.css')) ?>"><script src="<?= e(asset('js/audiobook.js')) ?>" type="module"></script><?php endif; ?>
@@ -167,12 +168,9 @@ if ($isMemberSurface) {
   <div class="shell">
     <header class="topbar" data-topbar>
       <?php if ($isMemberSurface): ?>
-      <form class="reading-search" method="get" action="<?= e(url('discover.php')) ?>" role="search">
-        <?= icon('search') ?><label class="sr-only" for="reading-search">Search the catalogue</label>
-        <input id="reading-search" name="q" type="search" value="<?= e($search ?? '') ?>" placeholder="Search book name, author, edition ..." autocomplete="off" data-suggest role="combobox" aria-expanded="false" aria-controls="reading-suggest" aria-autocomplete="list">
-        <?php if (isset($category) && $category !== ''): ?><input type="hidden" name="category" value="<?= e($category) ?>"><?php endif; ?>
-        <div class="suggest" id="reading-suggest" role="listbox" aria-label="Suggestions" hidden></div>
-      </form>
+      <button class="reading-search" type="button" data-palette-open aria-label="Search the catalogue" aria-haspopup="dialog" aria-controls="palette">
+        <?= icon('search') ?><span>Search books, authors, editions</span><span class="reading-search-key" aria-hidden="true">/</span>
+      </button>
       <a class="reading-profile" href="<?= e(url('profile.php')) ?>" aria-label="Profile for <?= e($user['name']) ?>"><span class="avatar"><?= e(initials($user['name'])) ?></span><span><?= e($user['name']) ?></span></a>
       <?php endif; ?>
       <a class="topbar__brand" href="<?= e($home) ?>"><?php if ($isMemberSurface): ?><span class="compact-brand-mark"><?= icon('book') ?></span><?php else: ?><?= logo_mark() ?><?php endif; ?>BookTrack<?php if ($isAdmin): ?><small>Librarian</small><?php endif; ?></a>
@@ -180,7 +178,7 @@ if ($isMemberSurface) {
         <?php if ($isMemberSurface): ?>
       <button class="compact-account" type="button" popovertarget="reading-menu" aria-label="Account menu" title="<?= e($user['name']) ?>"><span class="avatar"><?= e(initials($user['name'])) ?></span></button>
         <?php endif; ?>
-        <button class="btn btn--ghost btn--icon topbar__btn" type="button" data-palette-open aria-label="Search"><?= icon('search') ?></button>
+        <button class="btn btn--ghost btn--icon topbar__btn" type="button" data-palette-open aria-label="Search" aria-haspopup="dialog" aria-controls="palette"><?= icon('search') ?></button>
         <button class="btn btn--ghost btn--icon topbar__btn" type="button" popovertarget="reminders" aria-label="Reminders<?= $reminders ? ', ' . count($reminders) . ' new' : '' ?>"><?= icon('bell') ?><?php if ($reminders): ?><span class="count"><?= count($reminders) > 9 ? '9+' : count($reminders) ?></span><?php endif; ?></button>
         <a class="avatar topbar__avatar" href="<?= e(url('profile.php')) ?>" aria-label="Your profile"><?= e(initials($user['name'])) ?></a>
       </div>

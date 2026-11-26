@@ -908,8 +908,8 @@
 
 /* ======================================================================
    Live search. On the Discover header search, results drop down right
-   under the box as you type. On phones, the search icon in the top bar
-   opens a full-screen search sheet with the same results. Books for
+   under the box as you type. Member search buttons at every size
+   open the same compact search panel. Books for
    everyone, members too for librarians. Enter on a highlighted result
    opens it; otherwise Enter runs the normal search.
    ====================================================================== */
@@ -926,7 +926,11 @@
     let timer = 0;
     let lastQuery = null;
 
-    input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(update, 120); });
+    input.addEventListener('input', () => {
+      clearTimeout(timer);if(ctrl)ctrl.abort();clear();lastQuery=null;
+      if(!input.value.trim()){opts.onEmpty&&opts.onEmpty();return;}
+      opts.onLoading&&opts.onLoading();timer=setTimeout(update,120);
+    });
     input.addEventListener('keydown', (ev) => {
       if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
         if (!items.length) return;
@@ -946,11 +950,20 @@
       if (!q) { clear(); opts.onEmpty && opts.onEmpty(); return; }
       if (ctrl) ctrl.abort();
       ctrl = new AbortController();
+      opts.onLoading && opts.onLoading();
       try {
         const res = await fetch(api + '?q=' + encodeURIComponent(q), { signal: ctrl.signal, headers: { Accept: 'application/json', 'X-Requested-With': 'fetch' } });
+        if (!res.ok) throw new Error('Search unavailable');
         const data = await res.json();
+        if (!data.ok || !Array.isArray(data.books)) throw new Error('Invalid search response');
         if (input.value.trim() === q) render(q, data);
-      } catch (e) { if (e.name !== 'AbortError') render(q, { books: [], members: [] }); }
+      } catch (e) {
+        if (e.name !== 'AbortError' && input.value.trim() === q) {
+          clear();lastQuery=null;
+          if (opts.onError) opts.onError();
+          else render(q, { books: [], members: [] });
+        }
+      }
     }
 
     function clear() {
@@ -993,7 +1006,7 @@
         g.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
         add(g, 'See all results for “' + q + '”', null, null, '', () => go(data.all), 'palette__item--all');
       }
-      opts.onResults && opts.onResults();
+      opts.onResults && opts.onResults(items.length);
     }
 
     function group(label) {
@@ -1050,7 +1063,15 @@
       d.textContent = b.title.split(/\s+/).filter((w) => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
       return d;
     }
-    function go(url) { opts.onPick && opts.onPick(); window.location.href = url; }
+    function go(url) {
+      const destination=new URL(url,location.href);
+      const base=document.body.dataset.appBase;
+      if(base && destination.origin===location.origin && destination.pathname===base+'book.php') {
+        const source=location.pathname+location.search+location.hash;
+        if(source.length<=7000)destination.searchParams.set('return_to',source);
+      }
+      opts.onPick && opts.onPick();window.location.href=destination.href;
+    }
 
     return { update, clear, hasItems: () => list.childElementCount > 0, reset: () => { lastQuery = null; } };
   }
@@ -1087,30 +1108,41 @@
       document.addEventListener('pointerdown', (ev) => { if (!form.contains(ev.target)) show(false); });
     });
 
-    // ---- full-screen search sheet (phones: the search icon in the top bar)
+    // ---- one search panel for desktop, tablet and phone
     const dlg = document.getElementById('palette');
     if (dlg) {
       const input = dlg.querySelector('[data-palette-input]');
       const list = dlg.querySelector('[data-palette-list]');
-      const results = liveResults(input, list, { onPick: () => dlg.close() });
-      const open = () => {
+      const welcome=dlg.querySelector('[data-palette-welcome]');
+      const status=dlg.querySelector('[data-palette-status]');
+      const idle=()=>{welcome.hidden=false;list.hidden=true;status.textContent='';input.setAttribute('aria-expanded','false');};
+      const results = liveResults(input, list, {
+        onPick: () => dlg.close(),
+        onEmpty: idle,
+        onLoading:()=>{welcome.hidden=true;list.hidden=true;status.textContent='Searching the library…';input.setAttribute('aria-expanded','false');},
+        onResults:()=>{welcome.hidden=true;list.hidden=false;status.textContent='';input.setAttribute('aria-expanded','true');},
+        onError:()=>{welcome.hidden=true;list.hidden=true;status.textContent='Live search is unavailable. Press Enter to search the catalogue.';input.setAttribute('aria-expanded','false');}
+      });
+      let opener=null;
+      const open = (event) => {
         if (dlg.open) return;
+        opener=event.currentTarget;
         input.value = '';
         results.reset();
         results.clear();
+        idle();
         dlg.showModal();
         input.focus();
       };
       document.querySelectorAll('[data-palette-open]').forEach((b) => b.addEventListener('click', open));
       dlg.querySelector('[data-palette-close]').addEventListener('click', () => dlg.close());
-      dlg.addEventListener('click', (ev) => { if (ev.target === dlg) dlg.close(); });
-      // plain search on Enter when nothing is highlighted
-      input.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter' && !ev.defaultPrevented && input.value.trim()) {
-          const all = list.querySelector('.palette__item--all');
-          if (all) all.click();
-        }
+      dlg.addEventListener('close',()=>{input.setAttribute('aria-expanded','false');if(opener?.isConnected)opener.focus({preventScroll:true});});
+      dlg.addEventListener('click', (ev) => {
+        if(ev.target!==dlg)return;
+        const box=dlg.getBoundingClientRect();
+        if(ev.clientX<box.left||ev.clientX>box.right||ev.clientY<box.top||ev.clientY>box.bottom)dlg.close();
       });
+      input.form.addEventListener('submit',ev=>{if(!input.value.trim()){ev.preventDefault();input.focus();}});
     }
 
     // ---- Ctrl+K jumps to the page's search box (no pop-up on desktop)
