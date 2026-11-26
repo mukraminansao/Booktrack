@@ -54,7 +54,7 @@ if ($showFeature) {
         . ' ORDER BY b.created_at DESC, b.id DESC LIMIT 12');
     // A catalogue summary can be listened to without pretending we host a full audiobook.
     $audioBook = $popular[0] ?? $featured;
-    $audioChoices = q_all('SELECT b.id,b.title,bm.audio_file FROM books b LEFT JOIN book_media bm ON bm.book_id=b.id ORDER BY b.title,b.id');
+    $audioChoices = q_all('SELECT b.id,b.title,b.author,bm.audio_file FROM books b LEFT JOIN book_media bm ON bm.book_id=b.id ORDER BY b.title,b.id');
     $chosenAudio=(int)library_setting('featured_audio');
     $recorded=null;
     foreach($audioChoices as &$candidate){

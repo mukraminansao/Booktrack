@@ -49,13 +49,14 @@ $writing = $canReview && input('write') === '1';
 $total = count_reviews($bookId, $stars) - ($myReview && (!$stars || (int)$myReview['rating'] === $stars) ? 1 : 0);
 $p = paginate(max(0, $total), 10);
 $reviews = book_reviews($bookId, $stars, $sort, $p['per'], $p['offset'], $myReview ? $uid : null);
-$filterUrl = fn(array $q) => url('reviews.php', array_filter(['book' => $bookId] + $q + ['stars' => $stars ?: null, 'sort' => $sort !== 'recent' ? $sort : null]));
+$reviewBack=navigation_back('book.php?id='.(int)$bookId,'Back to book');
+$filterUrl = fn(array $q) => url('reviews.php', array_filter(['book' => $bookId,'return_to'=>$reviewBack['href']] + $q + ['stars' => $stars ?: null, 'sort' => $sort !== 'recent' ? $sort : null]));
 
 $title = 'Reviews of ' . $book['title'];
 $active = $isMember ? 'discover' : 'books';
 require __DIR__ . '/includes/partials/header.php';
 ?>
-<a class="back-link" href="<?= e(url('book.php', ['id' => $bookId])) ?>"><?= icon('arrow-left') ?> <span>Back to the book</span></a>
+<?= navigation_back_html('book.php?id='.(int)$bookId,'Back to the book') ?>
 
 <header class="page-head reviews-head">
   <div class="reviews-head__book">
@@ -85,7 +86,7 @@ require __DIR__ . '/includes/partials/header.php';
           <a class="chip" href="<?= e($filterUrl(['stars' => $s, 'page' => null])) ?>" aria-current="<?= $stars === $s ? 'true' : 'false' ?>"><?= $s ?> <span aria-hidden="true">★</span><span class="sr-only"><?= $s === 1 ? 'star' : 'stars' ?></span> <small><?= $n ?></small></a>
         <?php endforeach; ?>
       </nav>
-      <form method="get" class="reviews-toolbar__sort">
+      <form method="get" class="reviews-toolbar__sort"><input type="hidden" name="return_to" value="<?= e($reviewBack['href']) ?>">
         <input type="hidden" name="book" value="<?= $bookId ?>"><?php if ($stars): ?><input type="hidden" name="stars" value="<?= $stars ?>"><?php endif; ?>
         <label class="sr-only" for="sort">Sort reviews</label>
         <select class="select select--pill" id="sort" name="sort" data-autosubmit>

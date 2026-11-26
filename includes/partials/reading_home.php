@@ -7,10 +7,7 @@ $fullAudio = $audioBook && private_media_path(media_for((int)$audioBook['id'])['
 $fullChapters = $fullAudio ? chapters_for((int)$audioBook['id'],'audio') : [];
 $collectionUrl = !empty($homeCollection) ? url('collection.php',['id'=>$homeCollection['id']]) : url('discover.php',['view'=>'all']);
 $collectionShelf = !empty($homeCollection) ? $collectionBooks : $arrivals;
-$previewChapters = $audioBook ? [
-    ['title' => 'A little about ' . $audioBook['title'], 'text' => trim((string)$audioBook['description']) !== '' ? $audioBook['description'] : $audioBook['title'] . ' by ' . $audioBook['author'] . '. A synopsis has not been added for this title yet. Open the book details to explore this title.'],
-    ['title' => 'Your next chapter starts here', 'text' => $audioBook['title'] . ' by ' . $audioBook['author'] . '. ' . ((int)$audioBook['available'] > 0 ? plural((int)$audioBook['available'], 'copy', 'copies') . ' available to borrow. Open the book details to start reading.' : 'All copies are currently on loan. Open the book details to place a hold.')],
-] : [];
+$previewChapters = $audioBook ? catalogue_preview_chapters($audioBook) : [];
 ?>
 <div class="reading-layout">
   <section class="reading-hero" aria-labelledby="reading-greeting">
@@ -49,35 +46,12 @@ $previewChapters = $audioBook ? [
     <section class="reading-audio" id="listening" aria-labelledby="audio-heading"<?= !$fullAudio ? ' data-reading-player' : '' ?>>
       <div class="reading-section-heading"><h2 id="audio-heading">Audio &amp; previews</h2><?php if ($audioBook): ?><a href="<?= e($bookUrl($audioBook)) ?>" aria-label="View selected book details"><?= icon('chevron-right') ?></a><?php endif; ?></div>
       <?php if ($audioChoices): ?>
-      <form class="reading-audio-picker" method="get" action="<?= e(url('discover.php')) ?>#listening">
-        <label for="listening-book">Choose a book</label>
-        <select id="listening-book" name="listen" data-autosubmit>
-          <?php foreach ($audioChoices as $choice): ?><option value="<?= (int)$choice['id'] ?>" <?= (int)$choice['id']===(int)($audioBook['id'] ?? 0) ? 'selected' : '' ?>><?= e($choice['title']) ?> · <?= $choice['has_audio'] ? 'Audiobook' : 'Read-aloud preview' ?></option><?php endforeach; ?>
-        </select>
-        <noscript><button class="btn btn--ghost btn--sm" type="submit">Load book</button></noscript>
-      </form>
+      <div class="reading-audio-picker"><button class="btn btn--outline btn--sm" type="button" data-open="listening-search"><?= icon('search') ?> Search a book</button><noscript><a class="link" href="<?= e(url('discover.php',['view'=>'all'])) ?>">Browse books to listen</a></noscript></div>
       <?php endif; ?>
       <?php if ($fullAudio): ?>
       <?= audiobook_html($audioBook) ?>
       <?php elseif ($audioBook): ?>
-      <div class="reading-player">
-        <a class="reading-player-jacket" href="<?= e($bookUrl($audioBook)) ?>" aria-label="View <?= e($audioBook['title']) ?>"><?= cover_html($audioBook, 'reading-utility-cover') ?></a>
-        <div class="reading-player-body">
-          <a class="reading-player-title" href="<?= e($bookUrl($audioBook)) ?>"><?= e($audioBook['title']) ?></a>
-          <p class="reading-player-author"><?= e($audioBook['author']) ?></p>
-          <div class="reading-player-progress"><label class="sr-only" for="preview-position">Preview position</label><input type="range" id="preview-position" min="0" max="100" value="0" data-preview-position disabled></div>
-          <div class="reading-player-bottom">
-            <span class="reading-player-time" data-preview-time>0:00</span>
-            <div class="reading-player-controls">
-              <button type="button" data-preview-prev aria-label="Previous chapter" disabled><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5v14l-8-7zM21 5v14l-8-7z"/></svg></button>
-              <button type="button" class="reading-player-play" data-preview-play aria-label="Play book preview" aria-pressed="false" disabled><svg class="icon preview-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7z"/></svg><svg class="icon preview-pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h3v14H8zM15 5h3v14h-3z"/></svg></button>
-              <button type="button" data-preview-next aria-label="Next chapter" disabled><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5v14l8-7zM13 5v14l8-7z"/></svg></button>
-            </div>
-            <span class="reading-player-kind">Read-aloud preview</span>
-          </div>
-        </div>
-      </div>
-      <p class="reading-player-status" data-preview-status role="status">Enable JavaScript to listen to this catalogue preview.</p>
+      <?php $previewBook=$audioBook; require __DIR__.'/preview_player.php'; ?>
       <?php else: ?><p class="reading-empty">Book previews will appear when titles are added.</p><?php endif; ?>
     </section>
     <section class="reading-updates" aria-labelledby="chapters-heading">
@@ -107,3 +81,17 @@ $previewChapters = $audioBook ? [
   </section>
 </div>
 <script src="<?= e(asset('js/reading-player.js')) ?>" defer></script>
+
+<?php if ($audioChoices): ?>
+<dialog class="modal modal--sm listening-search" id="listening-search" data-listening-search-dialog aria-labelledby="listening-search-heading">
+  <div class="modal__head"><h2 id="listening-search-heading">Find a book to listen to</h2><button type="button" class="icon-btn" data-close aria-label="Close book search"><?= icon('x') ?></button></div>
+  <div class="modal__body">
+    <label class="sr-only" for="listening-query">Search by title or author</label><input class="input" type="search" id="listening-query" placeholder="Search by title or author…" autocomplete="off">
+    <ul class="listening-search-results">
+      <?php foreach ($audioChoices as $choice): ?><li data-listening-title><a href="<?= e(url('discover.php',['listen'=>(int)$choice['id']])) ?>#listening" <?= (int)$choice['id']===(int)($audioBook['id']??0)?'aria-current="true"':'' ?>><strong><?= e($choice['title']) ?></strong><span><?= e($choice['author']) ?> · <?= $choice['has_audio']?'Audiobook':'Read-aloud preview' ?></span></a></li><?php endforeach; ?>
+    </ul>
+    <p data-listening-empty role="status" hidden>No matching books. Try another title or author.</p>
+  </div>
+</dialog>
+<script src="<?= e(asset('js/listening-search.js')) ?>" defer></script>
+<?php endif; ?>

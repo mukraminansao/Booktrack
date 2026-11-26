@@ -44,6 +44,13 @@ function library_setting(string $key, string $default = ''): string
 }
 
 function media_for(int $bookId): ?array { return q_one('SELECT * FROM book_media WHERE book_id = ?', [$bookId]); }
+function catalogue_preview_chapters(array $book):array
+{
+    return [
+        ['title'=>'A little about '.$book['title'],'text'=>trim((string)$book['description'])!==''?$book['description']:$book['title'].' by '.$book['author'].'. A synopsis has not been added for this title yet.'],
+        ['title'=>'Your next chapter starts here','text'=>$book['title'].' by '.$book['author'].'. '.((int)$book['available']>0?plural((int)$book['available'],'copy','copies').' available to borrow.':'All copies are currently on loan.')],
+    ];
+}
 function audiobook_html(array $listeningBook, bool $expanded = false): string
 {
     $audioMedia = media_for((int)$listeningBook['id']);

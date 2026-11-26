@@ -57,6 +57,8 @@ function back(string $fallback = 'index.php'): void
     redirect($fallback);
 }
 
+require_once __DIR__.'/navigation.php';
+
 function is_post(): bool
 {
     return ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
