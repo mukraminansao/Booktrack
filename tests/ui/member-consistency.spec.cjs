@@ -1,6 +1,6 @@
 const {test,expect}=require('@playwright/test');
 const routes=[['dashboard','/discover.php'],['catalogue','/discover.php?view=all'],['book','/book.php?id=7'],['loans','/loans.php'],['favorites','/favorites.php'],['profile','/profile.php'],['messages','/messages.php']];
-const screenshotStyle='.nav__icon{background:transparent!important;box-shadow:none!important;color:var(--quiet)!important}.nav a{color:var(--quiet)!important}.nav a::after{display:none!important}.topbar__btn .count{visibility:hidden!important}.tabbar a{color:var(--quiet)!important}.tabbar__icon{background:transparent!important}';
+const screenshotStyle='.nav__icon{background:transparent!important;box-shadow:none!important;color:var(--quiet)!important}.nav a{color:var(--quiet)!important}.nav a::after{display:none!important}.nav__icon .icon{stroke-width:1.3!important}.topbar__btn .count{visibility:hidden!important}.tabbar a{color:var(--quiet)!important}.tabbar__icon{background:transparent!important}';
 async function signIn(page,context,theme){
   await context.addCookies([{name:'bt_theme',value:theme,url:test.info().project.use.baseURL||'http://127.0.0.1:8115'}]);
   await page.goto('/login.php');await page.getByLabel('Username',{exact:true}).fill('alice');await page.getByLabel('Password',{exact:true}).fill('member123');
@@ -11,7 +11,7 @@ async function shell(page){
   return page.evaluate(()=>{
     const style=s=>getComputedStyle(document.querySelector(s));const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return [r.x,r.width].map(n=>Math.round(n*100)/100);};
     const body=getComputedStyle(document.body),rail=style('.sidebar'),header=style('.topbar');
-    return {app:box('.app'),sidebar:box('.sidebar'),railDisplay:rail.display,railMargin:rail.margin,headerHeight:header.height,headerPadding:header.padding,iconSize:style('.nav__icon .icon').width,iconStroke:style('.nav__icon .icon').strokeWidth,navGap:style('.nav').gap,searchSize:style('.reading-search input').fontSize,avatarSize:style('.reading-profile .avatar').width,palette:['--paper','--paper-light','--ink','--quiet','--gold-text','--green','--red'].map(v=>body.getPropertyValue(v).trim())};
+    return {app:box('.app'),sidebar:box('.sidebar'),railDisplay:rail.display,railMargin:rail.margin,headerHeight:header.height,headerPadding:header.padding,iconSize:style('.nav__icon .icon').width,iconStroke:style('.nav a:not([aria-current]) .nav__icon .icon').strokeWidth,navGap:style('.nav').gap,searchSize:style('.reading-search input').fontSize,avatarSize:style('.reading-profile .avatar').width,palette:['--paper','--paper-light','--ink','--quiet','--gold-text','--green','--red'].map(v=>body.getPropertyValue(v).trim())};
   });
 }
 for(const width of [1440,1280,390])for(const theme of ['light','dark']){
@@ -25,6 +25,7 @@ for(const width of [1440,1280,390])for(const theme of ['light','dark']){
       expect(Number.parseFloat(metrics.headerHeight)).toBe(width===1440?72:width===1280?64:74);
       expect(metrics.sidebar[1]).toBe(width===1440?80:width===1280?68:0);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+      const active=page.locator('.sidebar .nav a[aria-current] .icon');if(await active.count())await expect(active).toHaveCSS('stroke-width','2.1px');
       await expect(page.locator('#main')).toBeVisible();await expect(page.locator('#main h1')).toBeVisible();
       if(name!=='dashboard')await expect(page.getByRole('navigation',{name:'Breadcrumb',exact:true})).toBeVisible();
       const header=await page.locator('.topbar').screenshot({animations:'disabled',caret:'hide',style:screenshotStyle});

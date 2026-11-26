@@ -1,5 +1,6 @@
 /* Shared member controls: dashboard, catalogue, details and account pages. */
 html {scrollbar-gutter:stable}
+@media(prefers-reduced-motion:reduce){@view-transition{navigation:none}::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
 .reading-home .member-breadcrumb {display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;line-height:1.5;color:var(--quiet);min-width:0}
 .reading-home .member-breadcrumb a {color:var(--gold-text)}
 .reading-home .member-breadcrumb [aria-current] {overflow-wrap:anywhere}
