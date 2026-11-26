@@ -1,6 +1,6 @@
 const {test,expect}=require('@playwright/test');
 const routes=[['dashboard','/discover.php'],['catalogue','/discover.php?view=all'],['book','/book.php?id=7'],['loans','/loans.php'],['favorites','/favorites.php'],['profile','/profile.php'],['messages','/messages.php']];
-const screenshotStyle='.nav__icon{background:transparent!important;box-shadow:none!important;color:var(--quiet)!important}.nav a{color:var(--quiet)!important}.nav a::after{display:none!important}.nav__icon .icon{stroke-width:1.3!important}.topbar__btn .count{visibility:hidden!important}.tabbar a{color:var(--quiet)!important}.tabbar__icon{background:transparent!important}';
+const screenshotStyle='.nav__icon{background:transparent!important;box-shadow:none!important;color:var(--quiet)!important}.nav a{color:var(--quiet)!important}.nav a::after{display:none!important}.nav__icon .icon{stroke-width:1.3!important}.topbar__btn .count{visibility:hidden!important}.tabbar a{color:var(--quiet)!important;font-weight:500!important}.tabbar__icon{background:transparent!important;box-shadow:none!important;color:var(--quiet)!important}.tabbar .icon{stroke-width:1.4!important}';
 async function signIn(page,context,theme){
   await context.addCookies([{name:'bt_theme',value:theme,url:test.info().project.use.baseURL||'http://127.0.0.1:8115'}]);
   await page.goto('/login.php');await page.getByLabel('Username',{exact:true}).fill('alice');await page.getByLabel('Password',{exact:true}).fill('member123');
@@ -31,7 +31,7 @@ for(const width of [1440,1280,390])for(const theme of ['light','dark']){
       const header=await page.locator('.topbar').screenshot({animations:'disabled',caret:'hide',style:screenshotStyle});
       headerImage??=header;expect(header.equals(headerImage),`${name} header pixels must match dashboard`).toBe(true);
       const nav=await page.locator(width<768?'.tabbar':'.sidebar .nav').screenshot({animations:'disabled',style:screenshotStyle});
-      navImage??=nav;expect(nav.equals(navImage),`${name} navigation pixels must match dashboard apart from active state`).toBe(true);
+      navImage??=nav;if(!nav.equals(navImage)){await testInfo.attach('dashboard-navigation.png',{body:navImage,contentType:'image/png'});await testInfo.attach('current-navigation.png',{body:nav,contentType:'image/png'});console.log(JSON.stringify({route:name,width,theme,referenceSize:[navImage.readUInt32BE(16),navImage.readUInt32BE(20)],actualSize:[nav.readUInt32BE(16),nav.readUInt32BE(20)],rect:await page.locator(width<768?'.tabbar':'.sidebar .nav').boundingBox()}));}expect(nav.equals(navImage),`${name} navigation pixels must match dashboard apart from active state`).toBe(true);
       await page.screenshot({path:testInfo.outputPath(`${name}-${width}-${theme}.png`),fullPage:true,animations:'disabled'});
     }
     expect(errors).toEqual([]);
