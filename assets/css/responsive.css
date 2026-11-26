@@ -37,7 +37,7 @@
 .reading-home.member-page h1,.reading-home.member-page h2 {font-weight:400}
 .reading-home.member-page :is(.btn,.input,.select,.chip) {min-height:48px}
 .reading-home.member-page .chat {height:calc(100dvh - 240px);min-height:480px}
-[data-theme=dark] .reading-home .app {border-color:#404736;box-shadow:0 16px 64px #0004}
+[data-theme=dark] .reading-home .app {border-color:#343434;box-shadow:0 16px 64px #0004}
 [data-theme=dark] .reading-home .shell {background:var(--paper)}
 /* Desktop AND laptop follow the showcase: hero over shelf/collection and audio/chapters. */
 @media(min-width:1200px){
@@ -46,7 +46,7 @@
  .reading-home {--dashboard-left:#f1efe3;--dashboard-right:#fcfbf7;--dashboard-inset:36px;--dashboard-gap:32px;--dashboard-split:calc((100% - 2 * var(--dashboard-inset) - var(--dashboard-gap)) * 1.3 / 2.3 + var(--dashboard-inset) + var(--dashboard-gap) / 2);--paper:var(--dashboard-left);--paper-light:#fff}
  .reading-home:not(.member-page) .shell {background:linear-gradient(to right,var(--dashboard-left) 0 var(--dashboard-split),var(--dashboard-right) var(--dashboard-split) 100%)}
  .reading-home .reading-player {background:#fff;border-color:#fff;box-shadow:0 5px 18px #3d382504}
- [data-theme=dark] .reading-home {--dashboard-left:#24291f;--dashboard-right:#1c2219;--paper-light:#1a2018}
+ [data-theme=dark] .reading-home {--dashboard-left:#171717;--dashboard-right:#1c1c1c;--paper-light:#212121}
  [data-theme=dark] .reading-home .reading-player {background:var(--paper-light);border-color:var(--border)}
  .reading-home .app {width:min(calc(100% - 64px),1600px);min-height:calc(100dvh - 56px)}
  .reading-home .sidebar {width:80px;margin:22px 0;min-height:520px}

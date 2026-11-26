@@ -64,7 +64,7 @@ if ($isMemberSurface) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="<?= $isMemberSurface ? ($theme === 'light' ? '#F8F4EB' : '#1A2018') : ($theme === 'light' ? '#EDF0F4' : '#0E1420') ?>">
+  <meta name="theme-color" content="<?= $isMemberSurface ? ($theme === 'light' ? '#F8F4EB' : '#171717') : ($theme === 'light' ? '#EDF0F4' : '#0E1420') ?>">
   <meta name="color-scheme" content="<?= $theme ?>">
   <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
   <title><?= e(($title ?? '') ? $title . ' | ' : '') ?><?= e(config('app_name')) ?></title>
