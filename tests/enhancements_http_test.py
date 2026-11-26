@@ -4,6 +4,7 @@ BOOKTRACK_SQLITE must point inside tests/runtime, and BOOKTRACK_URL must be a
 loopback PHP server using that same database. Never run against the live library.
 """
 import io
+import html
 import json
 import os
 import pathlib
@@ -79,6 +80,17 @@ try:
     php("require APP_ROOT.'/tests/reading_fixtures.php';reading_test_pdf($argv[2]);reading_test_audio($argv[3]);", str(pdf), str(wav))
     sql('UPDATE books SET pdf=? WHERE id=7', [pdf.relative_to(ROOT).as_posix()])
     admin, alice, brian = login('admin'), login('alice'), login('brian')
+    for origin in ['/discover.php','/discover.php?view=all&q=habit&sort=title','/favorites.php','/loans.php']:
+        detail = alice.get(BASE + '/book.php', params={'id':14,'return_to':origin}).text
+        back_href = re.search(r'data-navigation-back href="([^"]+)"', detail)
+        check(back_href is not None and html.unescape(back_href.group(1)) == origin, 'book returns to its source: ' + origin)
+        check('data-reading-player' in detail and 'data-preview-play' in detail and 'href="#book-listening"' in detail, 'book preview plays inline from source: ' + origin)
+    returned = post(alice,'/book.php?id=14',{'action':'navigation-check','return_to':'/discover.php?view=all&q=habit'})
+    check('return_to=' in returned.url and 'href="/discover.php?view=all&amp;q=habit"' in returned.text, 'book POST redirect preserves filtered source')
+    referrer = alice.get(BASE + '/book.php?id=14',headers={'Referer':BASE+'/discover.php'}).text
+    check('data-navigation-back href="/discover.php"' in referrer and 'Back to dashboard' in referrer, 'dashboard referrer works without client decoration')
+    unsafe = alice.get(BASE+'/book.php',params={'id':14,'return_to':'https://outside.example/discover.php'}).text
+    check('data-navigation-back href="/discover.php?view=all"' in unsafe, 'external return cannot replace safe fallback')
     guest = requests.Session()
     check('login.php' in guest.get(BASE + '/reader.php?id=7').url, 'guest cannot open reader')
     check('login.php' in guest.get(BASE + '/audio.php?id=7').url, 'guest cannot stream audio')
@@ -146,6 +158,12 @@ try:
     check(r.status_code == 206 and len(r.content) == 16, 'audio suffix range supported')
     check(alice.get(BASE + '/audio.php?id=7', headers={'Range': 'bytes=999999999-'}).status_code == 416, 'invalid audio range refused')
     check('data-audiobook' in alice.get(BASE + '/listen.php?id=7').text, 'listening page served')
+    direct_recording = alice.get(BASE+'/book.php?id=7').text
+    check('id="book-listening"' in direct_recording and 'data-audiobook' in direct_recording and 'data-reading-player' not in direct_recording, 'recording plays inside book details without a second preview player')
+    reader_back = alice.get(BASE+'/reader.php',params={'id':7,'return_to':'/book.php?id=7&return_to=%2Fdiscover.php'}).text
+    check('data-navigation-back href="/book.php?id=7&amp;return_to=%2Fdiscover.php"' in reader_back, 'reader returns through book to original dashboard')
+    listen_back = alice.get(BASE+'/listen.php',params={'id':7,'return_to':'/discover.php?listen=7'}).text
+    check('data-navigation-back href="/discover.php?listen=7"' in listen_back, 'full listening page can return directly to dashboard')
     check(api(alice, 'progress', medium='audio', position=6, total=12, rate=1.5).json()['progress']['rate'] == 1.5, 'listening position and speed saved')
     before = sql('SELECT title FROM book_chapters WHERE book_id=7 ORDER BY id')
     r = post(admin, '/admin/media.php?id=7', {'audio_title[]': ['Duplicate', 'Duplicate'], 'audio_position[]': ['1', '1']})
@@ -153,12 +171,12 @@ try:
     post(admin, '/admin/content.php', {'action': 'features', 'featured_book': 7, 'featured_audio': 7})
     check(sql("SELECT setting_value FROM app_settings WHERE setting_key='featured_book'")[0]['setting_value'] == '7', 'featured book selection saved')
     home = alice.get(BASE + '/discover.php').text
-    check('id="listening-book"' in home and 'data-audiobook' in home, 'featured audiobook keeps its recording and offers a book chooser')
+    check('data-open="listening-search"' in home and 'data-audiobook' in home, 'featured audiobook keeps its recording and offers a book chooser')
     for book_id, title in [(14, 'The Alchemist'), (9, 'The Psychology of Money')]:
         selected = alice.get(BASE + f'/discover.php?listen={book_id}').text
-        check(f'<option value="{book_id}" selected' in selected, f'chooser retains selected book {book_id}')
+        check('class="reading-player-title"' in selected and title in selected, f'chooser retains selected book {book_id}')
         check('data-reading-player' in selected and 'data-audiobook' not in selected and 'A little about ' + title in selected, f'selecting book {book_id} replaces the featured recording with its own preview')
-        check('listen=' + str(book_id) in alice.get(BASE + f'/book.php?id={book_id}').text, f'book {book_id} links to its own listening preview')
+        check('data-reading-player' in alice.get(BASE + f'/book.php?id={book_id}').text and 'href="#book-listening"' in alice.get(BASE + f'/book.php?id={book_id}').text, f'book {book_id} links to its own listening preview')
     selected = alice.get(BASE + '/discover.php?listen=7').text
     check('data-book-id="7"' in selected and 'data-audiobook' in selected and 'data-preview-chapter' not in selected, 'switching back to a recording restores its player and real chapters')
     check('Listen to audiobook' in alice.get(BASE + '/book.php?id=7').text, 'recorded title retains its full-audiobook action')

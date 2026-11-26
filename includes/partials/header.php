@@ -88,8 +88,9 @@ if ($isMemberSurface) {
   <?php if ($isMemberSurface): ?><link rel="stylesheet" href="<?= e(asset('css/reading-home.css')) ?>"><?php if (!$isHome): ?><link rel="stylesheet" href="<?= e(asset('css/member-pages.css')) ?>"><?php endif; ?><link rel="stylesheet" href="<?= e(asset('css/responsive.css')) ?>"><?php endif; ?>
   <script src="<?= e(asset('js/transitions.js')) ?>"></script>
   <script src="<?= e(asset('js/app.js')) ?>" defer></script>
+  <?php if ($user): ?><script src="<?= e(asset('js/navigation.js')) ?>" defer></script><?php endif; ?>
 </head>
-<body class="<?= e($bodyClass ?? '') ?>"<?= $user ? ' data-search-api="' . e(url('api/search.php')) . '"' : '' ?>>
+<body class="<?= e($bodyClass ?? '') ?>" data-app-base="<?= e(base_url()) ?>"<?= $user ? ' data-search-api="' . e(url('api/search.php')) . '"' : '' ?>>
 <?php if ($user):
     $home = url(home_for($user));
 ?>
