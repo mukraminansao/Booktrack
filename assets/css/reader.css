@@ -1,12 +1,11 @@
 .reader {min-width:0}
-.reader-toolbar {position:sticky;top:8px;z-index:30;display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:nowrap;padding:10px 14px;margin:0 0 16px;background:var(--paper-light);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px #201f1a0c}
-.reading-home .reader-toolbar .btn {width:48px;min-width:48px;height:48px;padding:10px}
 .reader-tools {display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .reader-page-label,.reader-zoom-label {display:flex;align-items:center;gap:8px;font-size:14px}
 .reader-page-label input {width:76px}
 .reader-zoom-label select {width:148px}
 .reader-status {font-size:14px;color:var(--quiet);min-height:24px;margin:12px 0}
 .reader-status.is-error {color:var(--red)}
+.reader-status.is-quiet {position:absolute;width:1px;height:1px;min-height:0;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .reader-layout {display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;align-items:start}
 .reader-navigation {border:1px solid var(--border);border-radius:14px;padding:14px;background:var(--paper-light);min-width:0}
 .reader-navigation details+details {margin-top:18px}
@@ -19,10 +18,11 @@
 .reader-bookmarks button:last-child {min-width:44px;text-align:center}
 .reader-chapters button:hover,.reader-bookmarks button:hover {background:var(--surface-2)}
 .reader-view {min-width:0}
-.reader-stage {overflow:auto;min-width:0;max-height:clamp(180px,calc(100dvh - 180px),820px);background:var(--surface-2);padding:16px;border:1px solid var(--border);border-radius:8px;overscroll-behavior:auto;scroll-margin-top:88px;scrollbar-width:thin}
+.reader-stage {overflow:auto;min-width:0;max-height:clamp(180px,calc(100dvh - 180px),820px);background:var(--surface-2);padding:16px;border:1px solid var(--border);border-radius:8px;overscroll-behavior:auto;scroll-margin-top:16px;scrollbar-width:thin}
 .reader-page-foot {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0 0;font-size:14px;color:var(--quiet)}
 .reader-page-foot .btn {gap:8px}
-.reader-page-foot>span {white-space:nowrap;font-variant-numeric:tabular-nums}
+.reader-page-foot .reader-page-label {white-space:nowrap;font-variant-numeric:tabular-nums;justify-content:center}
+.reader-page-foot .reader-page-label input {text-align:center}
 .reader-paper {position:relative;margin:auto;background:#fff;box-shadow:0 3px 12px #211f171c;color:#000}
 .reader-paper canvas {display:block}
 .reader-paper .textLayer {inset:0;overflow:clip;opacity:1}
@@ -32,7 +32,6 @@
  .reader-view{width:100%;order:0}
  .reader-stage{width:100%;max-height:clamp(160px,calc(100dvh - 260px),620px);padding:8px}
  .reader-navigation{width:100%;order:1}
- .reader-toolbar{gap:12px;padding:8px;top:6px}
  .reader-zoom-label{margin-left:0;flex-wrap:wrap}
  .reader-page-label{gap:8px}
  .reader-page-word{display:none}
@@ -41,4 +40,8 @@
  .reading-home .reader-tools .btn{padding:10px 14px}
  .reader-page-foot{gap:4px}
  .reading-home .reader-page-foot .btn{font-size:15px;padding:10px 8px}
+}
+@media(max-width:359px){
+ .reading-home .reader-page-foot .btn {width:48px;min-width:48px;padding:10px}
+ .reader-page-foot .btn>span {display:none}
 }
