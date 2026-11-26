@@ -64,10 +64,13 @@ if ($showFeature) {
     unset($candidate);
     if ($chosenAudio && ($chosen=find_book($chosenAudio))) $audioBook=$chosen;
     elseif ($recorded) $audioBook=find_book((int)$recorded['id']);
+    $remembered=$_COOKIE['bt_listening_'.(int)$user['id']]??'';
+    if(is_string($remembered)&&ctype_digit($remembered)&&($rememberedBook=find_book((int)$remembered)))$audioBook=$rememberedBook;
     if (input('listen') !== '') {
         $selected=find_book(input_int('listen'));
         if (!$selected) {flash('error','That book is no longer available. Choose another title to listen to.');redirect('discover.php');}
         $audioBook=$selected;
+        setcookie('bt_listening_'.(int)$user['id'],(string)$selected['id'],['expires'=>time()+2592000,'path'=>base_url(),'secure'=>!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off','samesite'=>'Lax']);
     }
     $homeCollection=q_one('SELECT * FROM collections WHERE is_active=1 ORDER BY sort_order,id LIMIT 1');
     $collectionBooks=$homeCollection ? q_all('SELECT '.book_columns().' FROM '.books_from().' JOIN collection_books cb ON cb.book_id=b.id WHERE cb.collection_id=? ORDER BY cb.position,b.title',[(int)$homeCollection['id']]) : [];

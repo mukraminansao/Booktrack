@@ -2,6 +2,9 @@
 .codex
 .agents
 .github
+node_modules
+package-lock.json
+package.json
 config.local.php
 deploy
 _backups

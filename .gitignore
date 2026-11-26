@@ -27,3 +27,6 @@ storage/locks/
 *.btenc
 _backups/
 __pycache__/
+node_modules/
+playwright-report/
+test-results/

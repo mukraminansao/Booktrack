@@ -42,3 +42,21 @@ function navigation_back_html(string $fallback,string $label):string
     $back=navigation_back($fallback,$label);
     return '<a class="back-link" data-navigation-back href="'.e($back['href']).'">'.icon('arrow-left').' <span>'.e($back['label']).'</span></a>';
 }
+
+/** Detail pages keep the navigation section of the page that opened them. */
+function member_navigation_section(bool $home,string $active,string $returnTo):string
+{
+    if($home)return 'discover';
+    if($active!=='discover')return $active;
+    if(!in_array(basename($_SERVER['SCRIPT_NAME']??''),['book.php','reader.php','listen.php','reviews.php','collection.php'],true))return 'catalog';
+    for($depth=0;$depth<8;$depth++){
+        $safe=navigation_safe_return($returnTo);if(!$safe)break;
+        $page=substr((string)parse_url($safe,PHP_URL_PATH),strlen(base_url()));
+        parse_str((string)parse_url($safe,PHP_URL_QUERY),$query);
+        if($page==='discover.php')return empty($query['view'])&&empty($query['q'])&&empty($query['category'])&&empty($query['available'])?'discover':'catalog';
+        $sections=['loans.php'=>'loans','favorites.php'=>'favorites','profile.php'=>'profile','messages.php'=>'messages'];
+        if(isset($sections[$page]))return $sections[$page];
+        $returnTo=is_string($query['return_to']??null)?$query['return_to']:'';
+    }
+    return 'catalog';
+}

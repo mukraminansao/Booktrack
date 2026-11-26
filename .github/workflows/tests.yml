@@ -48,6 +48,8 @@ jobs:
           node-version: '22'
       - name: Progress saving under connection failures
         run: node tests/reading_state_test.mjs
+      - name: Account-scoped listening continuity
+        run: node tests/listening_preferences_test.mjs
 
   e2e-sqlite:
     name: End-to-end (SQLite)
@@ -174,6 +176,41 @@ jobs:
       - name: Server log
         if: failure()
         run: cat "$RUNNER_TEMP/server.log"
+
+  member-ui:
+    name: Member UI consistency
+    runs-on: ubuntu-latest
+    env:
+      BOOKTRACK_UI_URL: http://127.0.0.1:8115
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, mbstring, gd
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Prepare an isolated UI library
+        run: |
+          mkdir -p tests/runtime
+          php tests/make_sqlite.php "$GITHUB_WORKSPACE/tests/runtime/ui.sqlite"
+          echo "BOOKTRACK_SQLITE=$GITHUB_WORKSPACE/tests/runtime/ui.sqlite" >> "$GITHUB_ENV"
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - name: Compare member shells, themes and listening continuity
+        run: npm run test:ui
+      - name: Keep visual review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: member-ui-visual-review
+          path: |
+            tests/runtime/ui-results
+            tests/runtime/ui-report
+          retention-days: 7
 
   demo-image:
     name: Demo container (Render)

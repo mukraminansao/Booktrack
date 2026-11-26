@@ -1,5 +1,5 @@
 /* One shell and deliberate breakpoints, with no viewport-height scaling. */
-.reading-home,.reading-home.member-page {padding:40px 0;font-size:1rem;line-height:1.5}
+.reading-home {padding:40px 0;font-size:1rem;line-height:1.5}
 .reading-home .app {display:flex;width:min(calc(100% - 80px),1120px);min-height:calc(100dvh - 80px);height:auto;aspect-ratio:auto;margin:auto;border:5px solid #ffffff80;border-radius:30px;background:var(--paper);box-shadow:0 20px 65px #65513c2b,inset 0 0 0 1px #fff9;overflow:clip;align-items:stretch;container-type:normal}
 .reading-home .sidebar {display:flex;position:relative;inset:auto;align-self:stretch;width:88px;flex-shrink:0;min-height:560px;height:auto;margin:25px 0;padding:0 0 8px;background:transparent;border-right:1px solid var(--border-strong);gap:0;overflow:visible;transform:none;box-shadow:none}
 .reading-home .sidebar .brand {justify-content:center;padding:0;width:100%;height:46px}
@@ -13,7 +13,7 @@
 .reading-home .rail-user {width:100%;gap:12px;align-items:center;transform:none}
 .reading-home .rail-bell,.reading-home .rail-account {display:none}
 .reading-home .rail-signout {display:flex;align-items:center;justify-content:center;width:48px;height:48px;padding:0;background:var(--surface-2);border-radius:50%}
-.reading-home .shell {background:radial-gradient(ellipse at 20% 15%,#fffdf75c,transparent 70%),var(--paper);min-width:0}
+.reading-home .shell {background:var(--paper);min-width:0}
 .reading-home .topbar {display:flex;flex-wrap:nowrap;position:relative;top:auto;z-index:35;height:80px;min-height:80px;padding:16px 38px;gap:20px;background:transparent;border:0;backdrop-filter:none}
 .reading-home .topbar__brand,.reading-home .topbar__avatar,.reading-home [data-palette-open],.compact-account {display:none}
 .reading-home .reading-search {display:flex;align-items:center;gap:15px;position:relative;order:1;flex:1;width:auto;min-width:0;margin:0 auto 0 0;padding:0;min-height:44px;border:0;border-radius:0;background:transparent;color:var(--quiet);transform:none}
@@ -44,14 +44,14 @@
 @media(min-width:1200px){
  .reading-home {padding:28px 0}
  /* One continuous colour split, aligned with the shelf/audio column boundary. */
- .reading-home:not(.member-page) {--dashboard-left:#f1efe3;--dashboard-right:#fcfbf7;--dashboard-inset:36px;--dashboard-gap:32px;--dashboard-split:calc((100% - 2 * var(--dashboard-inset) - var(--dashboard-gap)) * 1.3 / 2.3 + var(--dashboard-inset) + var(--dashboard-gap) / 2);--paper:var(--dashboard-left);--paper-light:#fff}
- .reading-home:not(.member-page) .shell {background:linear-gradient(to right,var(--dashboard-left) 0 var(--dashboard-split),var(--dashboard-right) var(--dashboard-split) 100%)}
- .reading-home:not(.member-page) .reading-player {background:#fff;border-color:#fff;box-shadow:0 5px 18px #3d382504}
- [data-theme=dark] .reading-home:not(.member-page) {--dashboard-left:#24291f;--dashboard-right:#1c2219;--paper-light:#1a2018}
- [data-theme=dark] .reading-home:not(.member-page) .reading-player {background:var(--paper-light);border-color:var(--border)}
+ .reading-home {--dashboard-left:#f1efe3;--dashboard-right:#fcfbf7;--dashboard-inset:36px;--dashboard-gap:32px;--dashboard-split:calc((100% - 2 * var(--dashboard-inset) - var(--dashboard-gap)) * 1.3 / 2.3 + var(--dashboard-inset) + var(--dashboard-gap) / 2);--paper:var(--dashboard-left);--paper-light:#fff}
+ .reading-home .shell {background:linear-gradient(to right,var(--dashboard-left) 0 var(--dashboard-split),var(--dashboard-right) var(--dashboard-split) 100%)}
+ .reading-home .reading-player {background:#fff;border-color:#fff;box-shadow:0 5px 18px #3d382504}
+ [data-theme=dark] .reading-home {--dashboard-left:#24291f;--dashboard-right:#1c2219;--paper-light:#1a2018}
+ [data-theme=dark] .reading-home .reading-player {background:var(--paper-light);border-color:var(--border)}
  .reading-home .app {width:min(calc(100% - 64px),1440px);min-height:calc(100dvh - 56px)}
- .reading-home:not(.member-page) .sidebar {width:80px;margin:22px 0;min-height:520px}
- .reading-home:not(.member-page) .topbar {height:72px;min-height:72px;padding:14px 36px}
+ .reading-home .sidebar {width:80px;margin:22px 0;min-height:520px}
+ .reading-home .topbar {height:72px;min-height:72px;padding:14px 36px}
  .reading-home:not(.member-page) .main {padding:18px 36px 26px}
  .reading-layout {grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-areas:'hero hero' 'popular utilities' 'collection utilities';grid-template-rows:auto auto 1fr;gap:24px var(--dashboard-gap);align-items:start}
  .reading-hero {grid-area:hero;grid-template-columns:minmax(0,1.05fr) minmax(0,1.1fr) minmax(0,.74fr);gap:28px;padding:0}
@@ -91,14 +91,14 @@
 }
 /* The laptop keeps the same composition, with slightly condensed dimensions. */
 @media(min-width:1200px) and (max-width:1439px){
- .reading-home:not(.member-page) {padding:20px 0;--dashboard-inset:28px;--dashboard-gap:26px}
- .reading-home:not(.member-page) .app {width:calc(100% - 48px);min-height:calc(100dvh - 40px);border-width:4px;border-radius:25px}
- .reading-home:not(.member-page) .sidebar {width:68px;margin:18px 0;min-height:500px}
- .reading-home:not(.member-page) .sidebar .brand .icon {width:27px;height:27px}
- .reading-home:not(.member-page) .nav {margin-top:46px;gap:15px}
- .reading-home:not(.member-page) .nav a,.reading-home:not(.member-page) .nav__icon {width:46px;height:46px}
- .reading-home:not(.member-page) .nav__icon .icon {width:23px;height:23px}
- .reading-home:not(.member-page) .topbar {height:64px;min-height:64px;padding:10px 28px}
+ .reading-home {padding:20px 0;--dashboard-inset:28px;--dashboard-gap:26px}
+ .reading-home .app {width:calc(100% - 48px);min-height:calc(100dvh - 40px);border-width:4px;border-radius:25px}
+ .reading-home .sidebar {width:68px;margin:18px 0;min-height:500px}
+ .reading-home .sidebar .brand .icon {width:27px;height:27px}
+ .reading-home .nav {margin-top:46px;gap:15px}
+ .reading-home .nav a,.reading-home .nav__icon {width:46px;height:46px}
+ .reading-home .nav__icon .icon {width:23px;height:23px}
+ .reading-home .topbar {height:64px;min-height:64px;padding:10px 28px}
  .reading-home:not(.member-page) .main {padding:12px 28px 20px}
  .reading-layout {gap:16px 26px}
  .reading-hero {gap:22px;grid-template-columns:minmax(0,1.05fr) minmax(0,1.05fr) minmax(0,.76fr)}
@@ -132,7 +132,7 @@
 }
 /* Tablet: stacked sections and the same touch navigation as the phone. */
 @media(max-width:1199px){
- .reading-home,.reading-home.member-page {padding:20px 0 calc(90px + env(safe-area-inset-bottom))}
+ .reading-home {padding:20px 0 calc(90px + env(safe-area-inset-bottom))}
  .reading-home .app {display:block;width:calc(100% - 40px);min-height:calc(100dvh - 125px);border-width:3px;border-radius:26px}
  .reading-home .sidebar {display:none}
  .reading-home .topbar {height:84px;min-height:84px;padding:18px 28px;gap:16px}
@@ -169,7 +169,7 @@
 }
 /* Phone: compact top bar, four book covers, and touch-sized controls. */
 @media(max-width:767px){
- .reading-home,.reading-home.member-page {padding:0 0 calc(86px + env(safe-area-inset-bottom));background:var(--paper)}
+ .reading-home {padding:0 0 calc(86px + env(safe-area-inset-bottom));background:var(--paper)}
  .reading-home .app {width:100%;min-height:calc(100dvh - 76px);border:0;border-radius:0;box-shadow:none}
  .reading-home .topbar {height:74px;min-height:74px;padding:15px 20px;gap:4px}
  .reading-home .topbar__brand {font-size:23px;gap:7px}
