@@ -19,11 +19,6 @@ require __DIR__ . '/includes/partials/header.php';
   </div>
   <p class="reader-status" data-reader-status role="status" aria-live="polite">Loading your book…</p>
   <p class="reader-status is-error" data-reader-warning role="status" hidden></p>
-  <div class="reader-toolbar" role="group" aria-label="Reading controls">
-    <button class="btn btn--outline" type="button" data-page-prev disabled aria-label="Previous page"><?= icon('arrow-left') ?></button>
-    <label class="reader-page-label"><span class="reader-page-word">Page</span><input class="input" type="number" min="1" value="1" data-page-number disabled aria-label="Page number"><span data-page-total>of —</span></label>
-    <button class="btn btn--outline" type="button" data-page-next disabled aria-label="Next page"><?= icon('arrow-right') ?></button>
-  </div>
   <div class="reader-layout">
     <aside class="reader-navigation" aria-label="Reading navigation">
       <details <?= $ebookChapters ? 'open' : '' ?>><summary>Chapters</summary><ol class="reader-chapters">
@@ -38,7 +33,7 @@ require __DIR__ . '/includes/partials/header.php';
     </div>
     <div class="reader-page-foot" role="group" aria-label="Page navigation below the book">
       <button class="btn btn--ghost" type="button" data-page-prev disabled aria-label="Previous page"><?= icon('arrow-left') ?><span>Previous</span></button>
-      <span data-reader-foot-page aria-hidden="true">—</span>
+      <label class="reader-page-label"><span class="reader-page-word">Page</span><input class="input" type="number" min="1" value="1" data-page-number disabled aria-label="Page number"><span data-page-total>of —</span></label>
       <button class="btn btn--ghost" type="button" data-page-next disabled aria-label="Next page"><span>Next</span><?= icon('arrow-right') ?></button>
     </div>
     </div>

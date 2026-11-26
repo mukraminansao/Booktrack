@@ -10,7 +10,9 @@ All header search entry points open the same native dialog. On phones it remains
 
 Preview positions are scoped to account, application path, book and summary revision in browser storage. Speed and volume are shared within that account/application. Edited summaries invalidate old preview positions. Playback works with storage blocked; restoring a position never starts speech automatically. The remembered book cookie contains only a catalogue ID and is scoped to account and app path. Actual recordings retain their existing account-backed position and speed saving.
 
-The PDF reader starts in Fit page, bounded by the viewport while retaining Fit width and explicit zoom levels. Its compact page bar remains sticky, and a second Previous/Next pair sits below the PDF. Both pairs share their enabled/disabled states. Turning a page resets the PDF scroll position and brings its start below the page bar. Zoomed pages use normal scroll chaining so the surrounding document can continue scrolling at a PDF boundary. Progress/bookmarks use the existing account-backed API.
+The PDF reader starts in Fit page, bounded by the viewport while retaining Fit width and explicit zoom levels. A single Previous / page-number input / Next row sits below the PDF. Routine page announcements remain available to screen readers without duplicating visible text above the book; loading, errors and action confirmations remain visible. Turning a page resets the PDF scroll position and brings its start into view. Zoomed pages use normal scroll chaining so the surrounding document can continue scrolling at a PDF boundary. Progress/bookmarks use the existing account-backed API.
+
+The catalogue's All books link sits outside the horizontally scrolling category list, so selecting even a distant category cannot hide it. Category links retain `view=all`, sorting, search and availability. All books clears the category within the catalogue; Clear filters resets the catalogue instead of returning to the dashboard. The All books heading stays stable, with category context in the selected filter and result count.
 
 ## Automated checks
 

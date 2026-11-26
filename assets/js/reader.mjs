@@ -3,7 +3,7 @@ import {readingState,drawBookmarks} from './reading-state.js';
 const root=document.querySelector('[data-reader]');
 if(root){
   pdfjs.GlobalWorkerOptions.workerSrc=new URL('../vendor/pdfjs/build/pdf.worker.mjs',import.meta.url).href;
-  const status=(message,error=false)=>{const el=root.querySelector('[data-reader-status]');el.textContent=message;el.classList.toggle('is-error',error);};
+  const status=(message,error=false)=>{const el=root.querySelector('[data-reader-status]');el.textContent=message;el.classList.toggle('is-error',error);el.classList.toggle('is-quiet',!error&&/^Page \d+ of \d+/.test(message));};
   const state=readingState(root,'ebook',status), stage=root.querySelector('[data-reader-stage]'),paper=root.querySelector('[data-reader-paper]'),canvas=root.querySelector('canvas'),layer=root.querySelector('[data-reader-text]'),number=root.querySelector('[data-page-number]');
   const prev=[...root.querySelectorAll('[data-page-prev]')],next=[...root.querySelectorAll('[data-page-next]')],zoom=root.querySelector('[data-reader-zoom]'),finish=root.querySelector('[data-reader-finish]');
   let pdf,page=Number(root.dataset.page)||1,completed=root.dataset.completed==='1',serial=0,renderTask,textTask;
@@ -14,7 +14,6 @@ if(root){
     if(renderTask){renderTask.cancel();await renderTask.promise.catch(()=>{});if(run!==serial)return;}if(textTask)textTask.cancel();
     prev.forEach(b=>b.disabled=page===1);next.forEach(b=>b.disabled=page===pdf.numPages);number.value=page;number.max=pdf.numPages;
     root.querySelector('[data-page-total]').textContent='of '+pdf.numPages;
-    root.querySelector('[data-reader-foot-page]').textContent=page+' / '+pdf.numPages;
     status('Page '+page+' of '+pdf.numPages+(completed?' · Finished':''));
     try{
       const pdfPage=await pdf.getPage(page);if(run!==serial)return;

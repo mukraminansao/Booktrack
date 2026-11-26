@@ -13,18 +13,28 @@ for(const [width,theme] of [[320,'light'],[390,'light'],[390,'dark'],[1440,'ligh
     await page.goto('/login.php');await page.getByLabel('Username',{exact:true}).fill('alice');await page.getByLabel('Password',{exact:true}).fill('member123');await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page).toHaveURL(/discover\.php$/);
     await page.goto('/reader.php?id=15');
     const stage=page.locator('[data-reader-stage]'),paper=page.locator('[data-reader-paper]'),number=page.getByRole('spinbutton',{name:'Page number',exact:true}),zoom=page.getByRole('combobox',{name:'Zoom',exact:true});
-    const top=page.getByRole('group',{name:'Reading controls',exact:true}),bottom=page.getByRole('group',{name:'Page navigation below the book',exact:true});
+    const bottom=page.getByRole('group',{name:'Page navigation below the book',exact:true});
     await expect(zoom).toBeEnabled();await expect(zoom).toHaveValue('page');
     await number.fill('1');await number.press('Tab');await expect(paper).toHaveAttribute('aria-label','Page 1');
-    await expect(top.getByRole('button',{name:'Previous page',exact:true})).toBeDisabled();await expect(bottom.getByRole('button',{name:'Previous page',exact:true})).toBeDisabled();
+    await expect(page.locator('.reader-toolbar')).toHaveCount(0);await expect(page.getByRole('spinbutton',{name:'Page number',exact:true})).toHaveCount(1);await expect(bottom.getByRole('spinbutton',{name:'Page number',exact:true})).toBeVisible();
+    await expect(page.locator('[data-reader-status]')).toHaveClass(/is-quiet/);
+    await expect(bottom.getByRole('button',{name:'Previous page',exact:true})).toBeDisabled();
+    expect((await bottom.boundingBox()).y).toBeGreaterThanOrEqual((await stage.boundingBox()).y+(await stage.boundingBox()).height);
     expect(await stage.evaluate(e=>e.scrollHeight<=e.clientHeight+2)).toBe(true);
     await bottom.getByRole('button',{name:'Next page',exact:true}).click();await expect(number).toHaveValue('2');await expect(paper).toHaveAttribute('aria-label','Page 2');
-    const aligned=await stage.boundingBox(),bar=await top.boundingBox();expect(bar.y).toBeGreaterThanOrEqual(0);expect(bar.y+bar.height).toBeLessThan(aligned.y+2);expect(aligned.y).toBeLessThan(120);
-    await top.getByRole('button',{name:'Next page',exact:true}).click();await expect(paper).toHaveAttribute('aria-label','Page 3');await expect(bottom.getByRole('button',{name:'Next page',exact:true})).toBeDisabled();await expect(top.getByRole('button',{name:'Next page',exact:true})).toBeDisabled();
+    const aligned=await stage.boundingBox();expect(aligned.y).toBeGreaterThanOrEqual(0);expect(aligned.y).toBeLessThan(120);
+    await number.fill('3');await number.press('Tab');await expect(paper).toHaveAttribute('aria-label','Page 3');await expect(bottom.getByRole('button',{name:'Next page',exact:true})).toBeDisabled();
     await bottom.getByRole('button',{name:'Previous page',exact:true}).click();await expect(paper).toHaveAttribute('aria-label','Page 2');
     await zoom.selectOption('1.5');
     await expect.poll(()=>stage.evaluate(e=>e.scrollHeight>e.clientHeight+100)).toBe(true);
     await stage.focus();await page.keyboard.press('End');await expect.poll(()=>stage.evaluate(e=>Math.abs(e.scrollHeight-e.clientHeight-e.scrollTop))).toBeLessThan(3);
+    // The shorter bottom-only pager can leave the document already at its end.
+    // Make room in the outer page while leaving the zoomed PDF at its boundary.
+    const outer=await page.evaluate(()=>({y:scrollY,max:document.documentElement.scrollHeight-innerHeight}));
+    if(outer.max-outer.y<10&&outer.y>20){
+      await page.mouse.move(4,100);await page.mouse.wheel(0,-120);
+      await expect.poll(()=>page.evaluate(()=>scrollY)).toBeLessThan(outer.y-10);
+    }
     const view=await stage.boundingBox();await page.mouse.move(view.x+Math.min(view.width/2,width/2),Math.min(height-140,view.y+view.height/2));
     const before=await page.evaluate(()=>scrollY);await page.mouse.wheel(0,400);
     await expect.poll(()=>page.evaluate(()=>scrollY)).toBeGreaterThan(before+10);

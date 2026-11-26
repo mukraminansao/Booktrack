@@ -87,12 +87,12 @@ if ($showFeature) {
     return;
 }
 
-$chipUrl = fn(string $c) => url('discover.php', array_filter(['category' => $c, 'view' => $c === '' ? 'all' : '', 'q' => $search, 'sort' => $sort !== 'new' ? $sort : '', 'available' => $onlyAvailable ? '1' : '']));
+$chipUrl = fn(string $c) => url('discover.php', array_filter(['category' => $c, 'view' => 'all', 'q' => $search, 'sort' => $sort !== 'new' ? $sort : '', 'available' => $onlyAvailable ? '1' : '']));
 ?>
 <header class="page-head page-head--discover">
   <div class="page-head__title">
-    <h1><?= $search !== '' ? 'Results for “' . e($search) . '”' : ($category !== '' ? e($category) : ($browseAll ? 'All books' : 'Discover')) ?></h1>
-    <p><?= $filtering ? ($p['total'] ? plural($p['total'], 'book') : 'No books') . ($onlyAvailable ? ', available now' : '') . '.' : 'Browse the catalogue, borrow a book and keep track of your loans.' ?></p>
+    <h1><?= $search !== '' ? 'Results for “' . e($search) . '”' : 'All books' ?></h1>
+    <p><?= $filtering ? ($p['total'] ? plural($p['total'], 'book') : 'No books') . ($category !== '' ? ' in ' . e($category) : '') . ($onlyAvailable ? ', available now' : '') . '.' : 'Browse the catalogue, borrow a book and keep track of your loans.' ?></p>
   </div>
   <form class="search" method="get" role="search" action="<?= e(url('discover.php')) ?>">
     <?= icon('search') ?>
@@ -102,7 +102,7 @@ $chipUrl = fn(string $c) => url('discover.php', array_filter(['category' => $c, 
     <kbd class="kbd" aria-hidden="true">/</kbd>
     <div class="suggest" id="q-suggest" role="listbox" aria-label="Suggestions" hidden></div>
   </form>
-  <?php if ($filtering && $books): ?><a class="btn btn--ghost" href="<?= e(url('discover.php')) ?>"><?= $browseAll && $search === '' && $category === '' && !$onlyAvailable ? 'Back to Discover' : 'Clear filters' ?></a><?php endif; ?>
+  <?php if ($filtering && $books): $unfiltered=$browseAll && $search === '' && $category === '' && !$onlyAvailable; ?><a class="btn btn--ghost" href="<?= e(url('discover.php',$unfiltered?[]:['view'=>'all'])) ?>"><?= $unfiltered ? 'Back to Discover' : 'Clear filters' ?></a><?php endif; ?>
 </header>
 
 <?php if ($block && $block['code'] === 'overdue'): ?>
@@ -132,11 +132,13 @@ $chipUrl = fn(string $c) => url('discover.php', array_filter(['category' => $c, 
     </form>
   </div>
 
-  <nav class="chips chips--scroll" aria-label="Categories">
-    <a class="chip" href="<?= e($chipUrl('')) ?>" aria-current="<?= $category === '' ? 'true' : 'false' ?>">All books</a>
+  <nav class="catalogue-categories" aria-label="Categories">
+    <a class="chip catalogue-categories__all" href="<?= e($chipUrl('')) ?>" aria-current="<?= $category === '' ? 'true' : 'false' ?>">All books</a>
+    <div class="chips chips--scroll catalogue-categories__list">
     <?php foreach ($cats as $c => $n): ?>
       <a class="chip" href="<?= e($chipUrl($c)) ?>" aria-current="<?= $category === $c ? 'true' : 'false' ?>"><?= e($c) ?> <small><?= (int)$n ?></small></a>
     <?php endforeach; ?>
+    </div>
   </nav>
 
   <?php if ($books): ?>
@@ -149,7 +151,7 @@ $chipUrl = fn(string $c) => url('discover.php', array_filter(['category' => $c, 
       <?= empty_art('search') ?>
       <h3>No books found</h3>
       <p>Try a different search or category.</p>
-      <a class="btn btn--ghost btn--sm" href="<?= e(url('discover.php')) ?>">Clear filters</a>
+      <a class="btn btn--ghost btn--sm" href="<?= e(url('discover.php',['view'=>'all'])) ?>">Clear filters</a>
     </div>
     <?php
       $suggest = q_all('SELECT ' . book_columns() . ' FROM ' . books_from()
