@@ -14,7 +14,7 @@ $pageDescription = $isPublicLanding
     ? 'BookTrack helps small libraries manage books, borrowing, holds and reminders. Browse the catalogue, check availability and keep track of your loans.'
     : 'Manage your library account, discover books, check availability and track your loans with BookTrack.';
 if ($isMemberSurface && !$isHome) $bodyClass = trim(($bodyClass ?? '') . ' reading-home member-page');
-$railActive = $isMemberSurface && !$isHome && $active === 'discover' ? 'catalog' : $active;
+$railActive = $isMemberSurface ? member_navigation_section($isHome,$active,input('return_to',$_SERVER['HTTP_REFERER']??'')) : $active;
 
 if ($user && !$isAdmin) {
     $navCounts = [
@@ -54,7 +54,7 @@ if ($isMemberSurface) {
     $railNav = [
         ['discover.php', 'discover', 'home', 'Home'],
         ['discover.php?view=all', 'catalog', 'library', 'Book catalogue'],
-        ['loans.php', 'loans', 'stopwatch', 'My loans'],
+        ['loans.php', 'loans', 'stopwatch', 'My loans', $navCounts['loans']],
         ['favorites.php', 'favorites', 'bookmark', 'Favorites'],
         ['profile.php', 'profile', 'settings', 'Profile and settings'],
     ];
@@ -85,12 +85,12 @@ if ($isMemberSurface) {
   <?php if ($user): ?><link rel="stylesheet" href="<?= e(asset('css/enhancements.css')) ?>"><script src="<?= e(asset('js/audiobook.js')) ?>" type="module"></script><?php endif; ?>
   <?php if (!$user): ?><link rel="stylesheet" href="<?= e(asset('css/welcome.css')) ?>"><?php endif; ?>
   <?php if ($isAdmin && in_array(basename($_SERVER['SCRIPT_NAME'] ?? ''),['book.php','listen.php'],true)): ?><link rel="stylesheet" href="<?= e(asset('css/reading-home.css')) ?>"><?php endif; ?>
-  <?php if ($isMemberSurface): ?><link rel="stylesheet" href="<?= e(asset('css/reading-home.css')) ?>"><?php if (!$isHome): ?><link rel="stylesheet" href="<?= e(asset('css/member-pages.css')) ?>"><?php endif; ?><link rel="stylesheet" href="<?= e(asset('css/responsive.css')) ?>"><?php endif; ?>
+  <?php if ($isMemberSurface): ?><link rel="stylesheet" href="<?= e(asset('css/reading-home.css')) ?>"><?php if (!$isHome): ?><link rel="stylesheet" href="<?= e(asset('css/member-pages.css')) ?>"><?php endif; ?><link rel="stylesheet" href="<?= e(asset('css/responsive.css')) ?>"><link rel="stylesheet" href="<?= e(asset('css/member-components.css')) ?>"><?php endif; ?>
   <script src="<?= e(asset('js/transitions.js')) ?>"></script>
   <script src="<?= e(asset('js/app.js')) ?>" defer></script>
   <?php if ($user): ?><script src="<?= e(asset('js/navigation.js')) ?>" defer></script><?php endif; ?>
 </head>
-<body class="<?= e($bodyClass ?? '') ?>" data-app-base="<?= e(base_url()) ?>"<?= $user ? ' data-search-api="' . e(url('api/search.php')) . '"' : '' ?>>
+<body class="<?= e($bodyClass ?? '') ?>" data-app-base="<?= e(base_url()) ?>"<?= $user ? ' data-member-id="'.(int)$user['id'].'"' : '' ?><?= $user ? ' data-search-api="' . e(url('api/search.php')) . '"' : '' ?>>
 <?php if ($user):
     $home = url(home_for($user));
 ?>
@@ -103,7 +103,7 @@ if ($isMemberSurface) {
     </a>
     <nav class="nav" aria-label="Main">
       <?php foreach ($railNav as $item): ?>
-        <a href="<?= e(url($item[0])) ?>" aria-label="<?= e($item[3]) ?>" title="<?= e($item[3]) ?>" <?= $railActive === $item[1] ? 'aria-current="page"' : '' ?>>
+        <a href="<?= e(url($item[0])) ?>" aria-label="<?= e($item[3]) ?>" title="<?= e($item[3]) ?>" data-nav-label="<?= e($item[3]) ?>" <?= $railActive === $item[1] ? 'aria-current="page"' : '' ?>>
           <span class="nav__icon"><?= icon($item[2]) ?></span>
           <span class="nav__label"><?= e($item[3]) ?></span>
           <?php if (!empty($item[4])): ?><span class="count" aria-label="<?= (int)$item[4] ?> <?= $item[1] === 'messages' ? 'new' : 'need attention' ?>"><?= (int)$item[4] ?></span><?php endif; ?>
@@ -120,7 +120,7 @@ if ($isMemberSurface) {
         <span class="nav__label">Profile</span>
       </a>
       <?php if ($isMemberSurface): ?>
-      <button class="rail-signout" type="button" popovertarget="reading-menu" aria-label="Account menu" title="Account menu"><span class="nav__icon"><?= icon('menu') ?></span></button>
+      <button class="rail-signout" type="button" popovertarget="reading-menu" aria-label="Account menu" title="Account menu"><span class="nav__icon"><?= icon('menu') ?></span><?php if ($navCounts['messages']): ?><span class="rail-unread" aria-label="<?= (int)$navCounts['messages'] ?> unread messages"><?= min(99,(int)$navCounts['messages']) ?></span><?php endif; ?></button>
 
       <?php else: ?>
       <form method="post" action="<?= e(url('logout.php')) ?>">
@@ -145,10 +145,10 @@ if ($isMemberSurface) {
       ? array_values(array_filter($nav, fn($i) => $i[1] !== 'activity'))
       : [
           ['discover.php', 'discover', 'home', 'Home'],
-          ['discover.php?view=all', 'catalog', 'search', 'Discover'],
-          ['loans.php', 'loans', 'book', 'Loans', $navCounts['loans']],
+          ['discover.php?view=all', 'catalog', 'library', 'Catalogue'],
+          ['loans.php', 'loans', 'stopwatch', 'Loans', $navCounts['loans']],
           ['favorites.php', 'favorites', 'bookmark', 'Saved'],
-          ['profile.php', 'profile', 'user', 'Profile'],
+          ['profile.php', 'profile', 'settings', 'Profile'],
         ];
   // Rendered after <main> (in footer.php) so keyboard and screen-reader users reach the
   // page before the bar; it's fixed to the bottom of the screen either way.
@@ -187,4 +187,11 @@ if ($isMemberSurface) {
     </header>
 
     <main class="main" id="main" tabindex="-1">
+<?php if ($isMemberSurface && !$isHome):
+    $sections=['discover'=>['Dashboard','discover.php'],'catalog'=>['Book catalogue','discover.php?view=all'],'loans'=>['My loans','loans.php'],'favorites'=>['Favorites','favorites.php'],'messages'=>['Messages','messages.php'],'profile'=>['Profile and settings','profile.php']];
+    $section=$sections[$railActive]??$sections['catalog'];
+    $detail=in_array(basename($_SERVER['SCRIPT_NAME']??''),['book.php','reader.php','listen.php','reviews.php','collection.php'],true);
+?>
+      <nav class="member-breadcrumb" aria-label="Breadcrumb"><a href="<?= e(url('discover.php')) ?>">Dashboard</a><?php if($detail&&$railActive!=='discover'): ?><span aria-hidden="true">/</span><a href="<?= e(url($section[1])) ?>"><?= e($section[0]) ?></a><?php endif; ?><span aria-hidden="true">/</span><span aria-current="page"><?= e($detail?($title??'Book details'):$section[0]) ?></span></nav>
+<?php endif; ?>
 <?php endif; ?>

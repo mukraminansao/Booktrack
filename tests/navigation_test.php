@@ -19,4 +19,12 @@ $_POST=['return_to'=>'/booktrack-v2/discover.php?category=Fiction'];check(naviga
 $_POST=[];$_SERVER['HTTP_REFERER']='http://localhost/booktrack-v2/book.php?id=7&return_to=%2Fbooktrack-v2%2Fdiscover.php';check(navigation_back('discover.php?view=all','Back')['href']==='/booktrack-v2/discover.php?view=all','same-book referrer cannot create a back loop');
 $_GET=['return_to'=>'/booktrack-v2/book.php?id=14&return_to=%2Fbooktrack-v2%2Fdiscover.php'];check(navigation_back('discover.php','Back')['href']===$_GET['return_to'],'nested related-book route retained');
 $testBase='/';$_GET=['return_to'=>'/discover.php'];$_SERVER['REQUEST_URI']='/book.php?id=7';check(navigation_back('discover.php?view=all','Back')['href']==='/discover.php','root-hosted deployment works');
+$_SERVER['SCRIPT_NAME']='/book.php';
+check(member_navigation_section(false,'discover','/discover.php')==='discover','book opened from dashboard keeps Home active');
+check(member_navigation_section(false,'discover','/discover.php?view=all&q=habit')==='catalog','book opened from catalogue keeps catalogue active');
+check(member_navigation_section(false,'discover','/book.php?id=7&return_to=%2Floans.php')==='loans','nested detail retains original loans section');
+check(member_navigation_section(false,'discover','https://outside.example/discover.php')==='catalog','external context cannot select a navigation section');
+$_SERVER['SCRIPT_NAME']='/discover.php';
+check(member_navigation_section(false,'discover','/book.php?id=7')==='catalog','catalogue filtering remains in the catalogue section');
+check(member_navigation_section(true,'discover','')==='discover','dashboard always keeps Home active');
 echo "$passed passed, 0 failed\n";

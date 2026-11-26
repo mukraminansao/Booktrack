@@ -80,7 +80,7 @@ $previewChapters = $audioBook ? catalogue_preview_chapters($audioBook) : [];
     <?php else: ?><p class="reading-empty">New arrivals will appear here.</p><?php endif; ?>
   </section>
 </div>
-<script src="<?= e(asset('js/reading-player.js')) ?>" defer></script>
+<script src="<?= e(asset('js/reading-player.js')) ?>" type="module"></script>
 
 <?php if ($audioChoices): ?>
 <dialog class="modal modal--sm listening-search" id="listening-search" data-listening-search-dialog aria-labelledby="listening-search-heading">

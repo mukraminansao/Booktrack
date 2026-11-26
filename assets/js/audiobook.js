@@ -1,7 +1,13 @@
 import {readingState,drawBookmarks} from './reading-state.js';
+import {listeningStore,rememberListeningBook} from './listening-preferences.js';
 const stamp=seconds=>{seconds=Number.isFinite(seconds)?Math.max(0,Math.floor(seconds)):0;return (seconds>=3600?Math.floor(seconds/3600)+':':'')+String(Math.floor(seconds/60)%60).padStart(seconds>=3600?2:1,'0')+':'+String(seconds%60).padStart(2,'0');};
 for(const root of document.querySelectorAll('[data-audiobook]')){
+  let storage;try{storage=window.localStorage;}catch{}
+  const preferences=listeningStore(storage,document.body.dataset.memberId,document.body.dataset.appBase);
   const audio=root.querySelector('audio'),play=root.querySelector('[data-audio-play]'),range=root.querySelector('[data-audio-position]'),rate=root.querySelector('[data-audio-rate]'),statusEl=root.querySelector('[data-audio-status]');
+  audio.volume=preferences.settings().volume;
+  const volume=root.querySelector('[data-listening-volume]');
+  if(volume){volume.value=String(audio.volume);volume.addEventListener('input',()=>{audio.volume=Number(volume.value);preferences.saveSettings({volume:audio.volume});});}
   const status=(message,error=false)=>{statusEl.textContent=message;statusEl.classList.toggle('is-error',error);statusEl.toggleAttribute('data-ready',!error);};
   const state=readingState(root,'audio',status);let completed=root.dataset.completed==='1',lastSaved=0,ready=false,loading=false;
   const save=(immediate=false)=>{if(ready&&Number.isFinite(audio.duration)&&audio.duration>0)return state.save({position:audio.currentTime,total:audio.duration,completed:completed?'1':'0',rate:audio.playbackRate},immediate);};
@@ -22,13 +28,13 @@ for(const root of document.querySelectorAll('[data-audiobook]')){
   audio.addEventListener('loadedmetadata',metadata);if(audio.readyState>=1)metadata();
   audio.addEventListener('durationchange',()=>{if(Number.isFinite(audio.duration)&&audio.duration>0)metadata();});
   audio.addEventListener('error',()=>status('This recording could not load. Try again later or contact the library.',true));
-  audio.addEventListener('play',()=>{play.setAttribute('aria-pressed','true');play.setAttribute('aria-label','Pause audiobook');status('Playing audiobook.');});
+  audio.addEventListener('play',()=>{rememberListeningBook(root.dataset.bookId,document.body.dataset.memberId,document.body.dataset.appBase);play.setAttribute('aria-pressed','true');play.setAttribute('aria-label','Pause audiobook');status('Playing audiobook.');});
   audio.addEventListener('pause',()=>{play.setAttribute('aria-pressed','false');play.setAttribute('aria-label','Play audiobook');save(true);});
   audio.addEventListener('timeupdate',()=>{update();if(performance.now()-lastSaved>5000){lastSaved=performance.now();save(true);}});
   audio.addEventListener('ended',async()=>{completed=true;finishLabel();if(await save(true))status('Audiobook finished.');});
   audio.addEventListener('seeked',()=>save(true));audio.addEventListener('ratechange',()=>save(true));
   play.addEventListener('click',async()=>{if(!audio.paused){audio.pause();return;}document.querySelectorAll('audio').forEach(a=>{if(a!==audio)a.pause();});try{if(completed||audio.ended){completed=false;audio.currentTime=0;finishLabel();save(true);}await audio.play();}catch(e){status('Playback could not start. Press play to try again.',true);}});
-  range.addEventListener('change',()=>seek(Number(range.value)/100*audio.duration));rate.addEventListener('change',()=>{audio.playbackRate=Number(rate.value);});
+  range.addEventListener('change',()=>seek(Number(range.value)/100*audio.duration));rate.addEventListener('change',()=>{audio.playbackRate=Number(rate.value);preferences.saveSettings({rate:audio.playbackRate});});
   root.querySelector('[data-audio-back]').addEventListener('click',()=>seek(audio.currentTime-15));root.querySelector('[data-audio-forward]').addEventListener('click',()=>seek(audio.currentTime+15));
   document.querySelectorAll('[data-audio-seek][data-audio-book="'+root.dataset.bookId+'"]').forEach(b=>b.addEventListener('click',()=>seek(Number(b.dataset.audioSeek))));
   root.querySelector('[data-audio-bookmark]')?.addEventListener('click',async()=>{try{bookmarks((await state.bookmark(audio.currentTime,'At '+stamp(audio.currentTime))).bookmarks);status('Listening bookmark saved.');}catch(e){status(e.message,true);}});

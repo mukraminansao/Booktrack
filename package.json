@@ -1,0 +1,6 @@
+{
+  "name": "booktrack-ui-checks",
+  "private": true,
+  "scripts": {"test:ui": "playwright test --config=tests/ui/playwright.config.cjs"},
+  "devDependencies": {"@playwright/test": "1.65.1"}
+}

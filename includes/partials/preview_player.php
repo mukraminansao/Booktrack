@@ -1,8 +1,8 @@
-      <div class="reading-player">
+      <div class="reading-player" data-preview-book="<?= (int)$previewBook['id'] ?>" data-preview-revision="<?= e(hash('sha256',json_encode(catalogue_preview_chapters($previewBook)))) ?>">
         <a class="reading-player-jacket" href="<?= e(url('book.php',['id'=>(int)$previewBook['id']])) ?>" aria-label="View <?= e($previewBook['title']) ?>"><?= cover_html($previewBook, 'reading-utility-cover') ?></a>
         <div class="reading-player-body">
           <a class="reading-player-title" href="<?= e(url('book.php',['id'=>(int)$previewBook['id']])) ?>"><?= e($previewBook['title']) ?></a>
-          <p class="reading-player-author"><?= e($previewBook['author']) ?></p>
+          <div class="preview-author-row"><p class="reading-player-author"><?= e($previewBook['author']) ?></p><label class="audio-speed"><span class="sr-only">Preview speed</span><select data-preview-rate aria-label="Preview speed" disabled><?php foreach([.5,.75,.95,1,1.25,1.5,1.75,2] as $speed): ?><option value="<?= $speed ?>" <?= $speed===.95?'selected':'' ?>><?= $speed ?>×</option><?php endforeach; ?></select></label><button class="listening-settings-button" type="button" popovertarget="preview-listening-options" aria-label="Listening settings" disabled><?= icon('settings') ?></button></div>
           <div class="reading-player-progress"><label class="sr-only" for="preview-position">Preview position</label><input type="range" id="preview-position" min="0" max="100" value="0" data-preview-position disabled></div>
           <div class="reading-player-bottom">
             <span class="reading-player-time" data-preview-time>0:00</span>
@@ -15,4 +15,5 @@
           </div>
         </div>
       </div>
+      <div class="listening-options" id="preview-listening-options" popover aria-label="Listening settings"><label>Volume <input data-preview-volume type="range" min="0" max="1" step=".05" value="1" aria-label="Preview volume" disabled></label></div>
       <p class="reading-player-status" data-preview-status role="status">Enable JavaScript to listen to this catalogue preview.</p>

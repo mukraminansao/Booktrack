@@ -184,7 +184,7 @@ require __DIR__ . '/includes/partials/header.php';
     <ol class="reading-timeline">
       <?php foreach(catalogue_preview_chapters($book) as $i=>$chapter): ?><li><button type="button" class="reading-chapter" data-preview-chapter="<?= $i ?>" data-preview-text="<?= e($chapter['text']) ?>" disabled><strong><?= e($chapter['title']) ?></strong><span class="reading-update-description"><?= e($chapter['text']) ?></span><span class="reading-update-status">Preview <?= $i+1 ?></span></button></li><?php endforeach; ?>
     </ol>
-    <script src="<?= e(asset('js/reading-player.js')) ?>" defer></script>
+    <script src="<?= e(asset('js/reading-player.js')) ?>" type="module"></script>
   <?php endif; ?>
 </section>
 

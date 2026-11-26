@@ -4,7 +4,7 @@
     <a class="reading-player-jacket" href="<?= e(url('book.php',['id'=>$listeningBook['id']])) ?>" aria-label="View <?= e($listeningBook['title']) ?>"><?= cover_html($listeningBook,'reading-utility-cover') ?></a>
     <div class="reading-player-body">
       <a class="reading-player-title" href="<?= e(url('listen.php',['id'=>$listeningBook['id']])) ?>"><?= e($listeningBook['title']) ?></a>
-      <div class="audio-author-row"><p class="reading-player-author"><?= e($audioMedia['narrator'] ?: $listeningBook['author']) ?></p><label class="audio-speed"><span class="sr-only">Playback speed</span><select data-audio-rate aria-label="Playback speed" disabled><?php foreach ([.5,.75,1,1.25,1.5,1.75,2] as $speed): ?><option value="<?= $speed ?>" <?= $speed===1 ? 'selected':'' ?>><?= $speed ?>×</option><?php endforeach; ?></select></label></div>
+      <div class="audio-author-row"><p class="reading-player-author"><?= e($audioMedia['narrator'] ?: $listeningBook['author']) ?></p><label class="audio-speed"><span class="sr-only">Playback speed</span><select data-audio-rate aria-label="Playback speed" disabled><?php foreach ([.5,.75,1,1.25,1.5,1.75,2] as $speed): ?><option value="<?= $speed ?>" <?= $speed===1 ? 'selected':'' ?>><?= $speed ?>×</option><?php endforeach; ?></select></label><button class="listening-settings-button" type="button" popovertarget="audio-listening-options-<?= (int)$listeningBook['id'] ?>" aria-label="Listening settings"><?= icon('settings') ?></button></div>
       <div class="reading-player-progress"><input type="range" min="0" max="100" value="0" step=".1" data-audio-position disabled aria-label="Audiobook position"></div>
       <div class="reading-player-bottom"><span data-audio-time>0:00</span><div class="reading-player-controls">
         <button type="button" data-audio-back disabled aria-label="Rewind 15 seconds"><?= icon('undo') ?></button>
@@ -13,6 +13,7 @@
       </div><span data-audio-duration>—</span></div>
     </div>
   </div>
+  <div class="listening-options" id="audio-listening-options-<?= (int)$listeningBook['id'] ?>" popover aria-label="Listening settings"><label>Volume <input data-listening-volume type="range" min="0" max="1" step=".05" value="1" aria-label="Audiobook volume"></label></div>
   <p class="audio-status" role="status" data-audio-status>Loading audio…</p>
   <?php if ($expanded): ?>
   <div class="audio-actions"><button class="btn btn--outline" type="button" data-audio-bookmark disabled><?= icon('bookmark') ?> Bookmark this moment</button><button class="btn btn--outline" type="button" data-audio-finish disabled><?= !empty($audioProgress['completed']) ? 'Listen again' : 'Mark finished' ?></button></div>
